@@ -1,0 +1,20 @@
+main: wind.pg.PGProtectWorld.PGProtectWorld
+name: PGProtectWorld
+api-version: 1.15
+version: '1.0'
+description: The PlayGround's protection!
+author: Windwhistle_
+commands:
+  pggb:
+   description: PGGrifblock commands
+   permission-message: You do not have permission!
+permissions:
+  pggb.player:
+    description: Allows use of PGGrifblock.
+    default: op
+  pggb.admin:
+    description: Allows use of PGGB admin commands.
+    default: op
+  pggb.bypass:
+    description: Bypass command filter in-game.
+    default: op
