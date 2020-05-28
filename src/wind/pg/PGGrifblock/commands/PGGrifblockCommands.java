@@ -1,10 +1,14 @@
 package wind.pg.PGGrifblock.commands;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import net.md_5.bungee.api.ChatColor;
 import wind.pg.PGGrifblock.PGGrifblock;
 
 public class PGGrifblockCommands implements CommandExecutor {
@@ -15,10 +19,123 @@ public class PGGrifblockCommands implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		if(sender.hasPermission("pgprotect.admin") && sender instanceof Player) {
-			
+		if(sender.hasPermission("pggb.player")) {
+			if(args.length < 1 || args[0].equalsIgnoreCase("help")) {
+				String helpString = "";
+				Map<String, String> commandStrings = new HashMap<String, String>();
+				commandStrings.put("help", "Displays this help page.");
+				commandStrings.put("join", "Queues you for an arena.");
+				commandStrings.put("leave", "Disconnects you from any current arena.");
+				commandStrings.put("spectate", "Toggles spectating of an arena.");
+				commandStrings.put("top", "Shows top five scores for the given arena.");
+				commandStrings.put("admin|tp", "Teleport to the given arena.");
+				commandStrings.put("admin|create", "Creates an arena with the given name.");
+				commandStrings.put("admin|edit", "Toggles edit mode for the arena you're currently standing in or with the given name.");
+				commandStrings.put("admin|delete", "Deletes an arena with the given name.");
+				commandStrings.put("admin|reload", "Reloads the config and resets arenas if they are empty.");
+				helpString += ChatColor.YELLOW + "--------------------" + ChatColor.WHITE + " Help " + ChatColor.YELLOW + "--------------------\n";
+				for(String cmdStr : commandStrings.keySet()) {
+					if(!cmdStr.contains("admin") || (cmdStr.contains("admin|") && sender.hasPermission("pggb.admin"))) {
+						String newCmd = cmdStr;
+						newCmd = newCmd.replace("admin|", "");
+						helpString += ChatColor.DARK_GRAY + "? " + ChatColor.GOLD + "/pggb " + newCmd + ChatColor.WHITE + ": " + commandStrings.get(cmdStr) + "\n";
+					}
+				}
+				sender.sendMessage(helpString);
+			}
+			else if(args[0].equalsIgnoreCase("reload")) {
+				if(!sender.hasPermission("pggb.admin")) {
+					plugin.writeMessage(sender, "You have to have the pggb.admin permission to use that!");
+					return false;
+				}
+				if(!plugin.getArenasInProgress()) {
+					plugin.reloadConfig();
+					plugin.clearArenas();
+					plugin.writeMessage(sender, "PGGrifblock config reloaded!");
+				}
+				else {
+					plugin.writeMessage(sender, "There are still arenas in progress!");
+				}
+			}
+			else if(args[0].equalsIgnoreCase("create")) {
+				if(!sender.hasPermission("pggb.admin")) {
+					plugin.writeMessage(sender, "You have to have the pggb.admin permission to use that!");
+					return false;
+				}
+				if(args.length > 1) {
+					String[] blacklistNames = {"exit"};
+					if(plugin.arrayHas(blacklistNames, args[1])) {
+						plugin.writeMessage(sender, "Arenas cannot be named " + args[1] + "!");
+						return false;
+					}
+					if(plugin.createArena(args[1])) {
+						plugin.writeMessage(sender, args[1] + " has been created!");
+					}
+					else {
+						plugin.writeMessage(sender, "Something went wrong! Maybe " + args[1] + " is already made?");
+					}
+				}
+				else {
+					plugin.writeMessage(sender, "You have to specify a name for the arena!");
+				}
+			}
+			else if(args[0].equalsIgnoreCase("tp")) {
+				if(!sender.hasPermission("pggb.admin")) {
+					plugin.writeMessage(sender, "You have to have the pggb.admin permission to use that!");
+					return false;
+				}
+				if(sender instanceof Player) {
+					Player ply = (Player) sender;
+					if(args.length > 1 && plugin.arenaExists(args[1])) {
+						ply.teleport(plugin.getArenaBlockLocation(args[1], "playerSpawn"));
+						//Location spawnLoc = new Location(plugin.getArenaObj(args[1]).arenaWorld, plugin.getArenaCordData(args[1], "playerSpawn").get(0), plugin.getArenaCordData(args[1], "playerSpawn").get(1)+1, plugin.getArenaCordData(args[1], "playerSpawn").get(2));
+						//ply.teleport(spawnLoc);
+					}
+					else {
+						plugin.writeMessage(ply, "That's not a valid arena!");
+					}
+				}
+			}
+			else if(args[0].equalsIgnoreCase("edit")) {
+				if(!sender.hasPermission("pggb.admin")) {
+					plugin.writeMessage(sender, "You have to have the pggb.admin permission to use that!");
+					return false;
+				}
+				if(sender instanceof Player) {
+					Player ply = (Player) sender;
+					//if(plugin.playerIsPlaying(ply) == null && plugin.playerIsQueued(ply) == null && plugin.isSpectating(ply) == null) {
+						/*if(plugin.isInEditMode(ply) != null) {
+							plugin.toggleEditMode(ply);
+							plugin.writeMessage(ply, "Edit mode has been ended!");
+							return false;
+						}*/
+					if(plugin.isInEditMode(ply) != null) {
+						plugin.writeMessage(ply, "Edit mode has been ended!");
+						plugin.toggleEditMode(ply, null);
+						return true;
+					}
+					String arenaName = null;
+					if(plugin.isInArena(ply.getLocation()) != null) {
+						arenaName = plugin.isInArena(ply.getLocation()).arenaName;
+					}
+					else {
+						if(args.length > 1 && plugin.arenaExists(args[1])) {
+							arenaName = args[1];
+						}
+						else {
+							plugin.writeMessage(ply, "No arena found.");
+						}
+					}
+					if(arenaName != null && !plugin.getArenaObj(arenaName).inProgress) {
+						plugin.writeMessage(ply, "You are now editing " + arenaName + "! Use /pggb edit whenever you want to exit edit mode!");
+						plugin.toggleEditMode(ply, arenaName);
+					}
+				}
+				//else {
+				//	plugin.writeMessage(ply, "You can't toggle edit mode while playing or queued!");
+				//}
+			}
 		}
 		return false;
 	}
-	
 }

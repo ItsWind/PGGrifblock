@@ -6,19 +6,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import wind.pg.PGGrifblock.commands.PGGrifblockCommands;
+import wind.pg.PGGrifblock.events.PGGrifblockPlayerClickBlockEvent;
 
 public class PGGrifblock extends JavaPlugin {
 	Map<String, PGGrifblockArena> arenas = new HashMap<String, PGGrifblockArena>();
 	
+	ArrayList<ItemStack> editingInventory = new ArrayList<ItemStack>();
 	Map<Player, String> editingPlayers = new HashMap<Player, String>();
 	Map<Player, ItemStack[]> editingPlayersInvs = new HashMap<Player, ItemStack[]>();
 	
@@ -26,6 +33,21 @@ public class PGGrifblock extends JavaPlugin {
 	public void onEnable() {
 		getServer().getConsoleSender().sendMessage("PGGrifblock loaded!");
 		getCommand("pggb").setExecutor(new PGGrifblockCommands(this));
+		
+		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerClickBlockEvent(this), this);
+		
+		Map<Material, String> editingTools = new HashMap<Material, String>();
+		editingTools.put(Material.BARRIER, "Bounds");
+		editingTools.put(Material.GOLD_BLOCK, "Player Spawn");
+		//editingTools.put(Material.EMERALD_BLOCK, "Mob Spawns");
+		//editingTools.put(Material.ENDER_CHEST, "Mystery Blocks");
+		for(Material mat : editingTools.keySet()) {
+			ItemStack itemToAdd = new ItemStack(mat, 1);
+			ItemMeta itemToAddMeta = itemToAdd.getItemMeta();
+			itemToAddMeta.setDisplayName("Set "+editingTools.get(mat));
+			itemToAdd.setItemMeta(itemToAddMeta);
+			editingInventory.add(itemToAdd);
+		}
 	}
 	
 	@Override
@@ -38,7 +60,22 @@ public class PGGrifblock extends JavaPlugin {
 	}
 	
 	public void toggleEditMode(Player ply, String arenaName) {
-		
+		if(isInEditMode(ply) != null) {
+			editingPlayers.remove(ply);
+			ply.getInventory().setContents(editingPlayersInvs.get(ply));
+			editingPlayersInvs.remove(ply);
+			//removeUnclaimedData(ply);
+		}
+		else {
+			arenas.remove(arenaName);
+			editingPlayers.put(ply, arenaName);
+			editingPlayersInvs.put(ply, ply.getInventory().getContents());
+			//setUnclaimedData(ply, "oldInv", ply.getInventory().getContents());
+			ply.getInventory().clear();
+			for(ItemStack item : editingInventory) {
+				ply.getInventory().addItem(item);
+			}
+		}
 	}
 	
 	public File getArenaFile(String arenaName) {
@@ -79,14 +116,14 @@ public class PGGrifblock extends JavaPlugin {
 		else {
 			return false;
 		}
-		FileConfiguration arenasConfig = this.getArenaConfigFile(arenaName);
+		//FileConfiguration arenasConfig = this.getArenaConfigFile(arenaName);
 		this.editArenaData(arenaName, "name", arenaName);
-		try {
-			arenasConfig.save(arenasFile);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
+		//try {
+		//	arenasConfig.save(arenasFile);
+		//} catch (IOException e) {
+		//	e.printStackTrace();
+		//	return false;
+		//}
 		return true;
 	}
 	
@@ -114,6 +151,8 @@ public class PGGrifblock extends JavaPlugin {
 	public Location getArenaBlockLocation(String arenaName, String dataToGet) {
 		FileConfiguration arenaConfig = this.getArenaConfigFile(arenaName);
 		Location locToReturn = arenaConfig.getLocation(dataToGet);
+		if(locToReturn == null)
+			locToReturn = new Location(getServer().getWorld("world"), 0, 0, 0);
 		return locToReturn;
 	}
 	
@@ -135,7 +174,15 @@ public class PGGrifblock extends JavaPlugin {
 	}
 	
 	public PGGrifblockArena getArenaObj(String arenaName) {
-		return arenas.get(arenaName);
+		arenaName = arenaName.toLowerCase();
+		if(arenas.containsKey(arenaName)) {
+			return arenas.get(arenaName);
+		}
+		else {
+			PGGrifblockArena arena = new PGGrifblockArena(this, getArenaConfigFile(arenaName).getString("name"));
+			arenas.put(arenaName, arena);
+			return arenas.get(arenaName);
+		}
 	}
 	
 	public PGGrifblockArena isInArena(Location loc) {
@@ -166,5 +213,39 @@ public class PGGrifblock extends JavaPlugin {
 		} else {
 			return false;
 		}
+	}
+	
+	public void clearArenas() {
+		for(String arenaName : arenas.keySet()) {
+			Bukkit.getScheduler().cancelTask(getArenaObj(arenaName).queueTimer);
+		}
+		arenas.clear();
+	}
+	
+	public boolean getArenasInProgress() {
+		if(arenas.size() > 0) {
+			for(String arenaName : arenas.keySet()) {
+				if(getArenaObj(arenaName).inProgress) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public void writeMessage(CommandSender ply, String message) {
+		ply.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', getConfig().getString("signTitle")) + ChatColor.DARK_GRAY + "] " + ChatColor.YELLOW + message);
+	}
+	public void writeMessage(Player ply, String message) {
+		ply.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', getConfig().getString("signTitle")) + ChatColor.DARK_GRAY + "] " + ChatColor.YELLOW + message);
+	}
+	
+	public boolean arrayHas(Object[] array, Object value) {
+		for(Object x : array) {
+			if(x.equals(value)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

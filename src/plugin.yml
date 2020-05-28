@@ -1,8 +1,8 @@
-main: wind.pg.PGProtectWorld.PGProtectWorld
-name: PGProtectWorld
+main: wind.pg.PGGrifblock.PGGrifblock
+name: PGGrifblock
 api-version: 1.15
 version: '1.0'
-description: The PlayGround's protection!
+description: Grifblock
 author: Windwhistle_
 commands:
   pggb:
