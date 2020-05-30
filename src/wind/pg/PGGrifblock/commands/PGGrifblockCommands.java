@@ -43,6 +43,31 @@ public class PGGrifblockCommands implements CommandExecutor {
 				}
 				sender.sendMessage(helpString);
 			}
+			else if(args[0].equalsIgnoreCase("leave")) {
+				if(sender instanceof Player) {
+					Player ply = (Player) sender;
+					if(plugin.playerIsPlaying(ply) != null) {
+						plugin.removePlayerFromArenaQueue(plugin.playerIsPlaying(ply).arenaName, ply, false);
+					}
+					else if(plugin.playerIsQueued(ply) != null) {
+						plugin.removePlayerFromArenaQueue(plugin.playerIsQueued(ply).arenaName, ply, false);
+					}
+				}
+			}
+			else if(args[0].equalsIgnoreCase("join")) {
+				if(sender instanceof Player) {
+					Player ply = (Player) sender;
+					if(plugin.playerIsPlaying(ply) == null && plugin.playerIsQueued(ply) == null) {
+						if(args.length > 1 && plugin.arenaExists(args[1])) {
+							String arenaName = args[1];
+							plugin.addPlayerToArenaQueue(arenaName, ply);
+						}
+						else {
+							plugin.writeMessage(ply, "No arena found.");
+						}
+					}
+				}
+			}
 			else if(args[0].equalsIgnoreCase("reload")) {
 				if(!sender.hasPermission("pggb.admin")) {
 					plugin.writeMessage(sender, "You have to have the pggb.admin permission to use that!");

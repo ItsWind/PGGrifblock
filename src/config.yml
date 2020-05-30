@@ -1,2 +1,22 @@
 # What will have to be at the top of signs in order to join a queue.
 signTitle: '&cGrifblock'
+# Enable/disable scoreboard.
+showScoreboard: true
+
+## You can set all the values below in a specific arena config file to set it per arena. Will default to these.
+# The wait time before starting an arena in queue.
+waitTime: 15
+# The maximum amount of players that can join an arena.
+maxPlayers: 8
+# The minimum amount of players to start an arena.
+minPlayers: 1
+# The amount of seconds to wait before starting the next wave.
+waveGraceTime: 20
+
+# A list of arena award commands to execute.
+# #wave - get the number of the wave.
+# #player - get the name of the player.
+# #survived - get the number of survived waves.
+# #survivedMultx - place a number where x is and get that number multiplied by survived waves.
+arenaRewardCommands:
+- 'cupoints add #player #survivedMult1'

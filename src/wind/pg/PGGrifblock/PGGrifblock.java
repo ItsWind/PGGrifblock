@@ -5,11 +5,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -36,6 +39,8 @@ public class PGGrifblock extends JavaPlugin {
 		
 		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerClickBlockEvent(this), this);
 		
+		this.saveDefaultConfig();
+		
 		Map<Material, String> editingTools = new HashMap<Material, String>();
 		editingTools.put(Material.BARRIER, "Bounds");
 		editingTools.put(Material.GOLD_BLOCK, "Player Spawn");
@@ -53,6 +58,183 @@ public class PGGrifblock extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		getServer().getConsoleSender().sendMessage("PGGrifblock unloaded!");
+	}
+	
+	public void createUnclaimedData(Player ply) {
+		File unclaimedDataFile = new File(getDataFolder() + File.separator + "unclaimeddata" + File.separator, ply.getUniqueId().toString() + ".yml");
+		if(!unclaimedDataFile.exists()) {
+			try {
+				unclaimedDataFile.getParentFile().mkdirs();
+				unclaimedDataFile.createNewFile();
+			}
+			catch(IOException e) {
+				return;
+			}
+		}
+	}
+	
+	public boolean hasUnclaimedData(Player ply) {
+		File unclaimedDataFile = new File(getDataFolder() + File.separator + "unclaimeddata" + File.separator, ply.getUniqueId().toString() + ".yml");
+		if(unclaimedDataFile.exists()) {
+			return true;
+		}
+		return false;
+	}
+	
+	public FileConfiguration getUnclaimedData(Player ply) {
+		File unclaimedDataFile = new File(getDataFolder() + File.separator + "unclaimeddata" + File.separator, ply.getUniqueId().toString() + ".yml");
+		createUnclaimedData(ply);
+		FileConfiguration unclaimedDataConfig = new YamlConfiguration();
+		try {
+			unclaimedDataConfig.load(unclaimedDataFile);
+		}
+		catch(IOException | InvalidConfigurationException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return unclaimedDataConfig;
+	}
+	
+	public void setUnclaimedData(Player ply, String dataName, Object value) {
+		File unclaimedDataFile = new File(getDataFolder() + File.separator + "unclaimeddata" + File.separator, ply.getUniqueId().toString() + ".yml");
+		createUnclaimedData(ply);
+		FileConfiguration unclaimedDataConfig = new YamlConfiguration();
+		try {
+			unclaimedDataConfig.load(unclaimedDataFile);
+		}
+		catch(IOException | InvalidConfigurationException e) {
+			e.printStackTrace();
+			return;
+		}
+		
+		unclaimedDataConfig.set(dataName, value);
+		
+		try {
+			unclaimedDataConfig.save(unclaimedDataFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+	}
+	
+	public void removeUnclaimedData(Player ply) {
+		File unclaimedDataFile = new File(getDataFolder() + File.separator + "unclaimeddata" + File.separator, ply.getUniqueId().toString() + ".yml");
+		unclaimedDataFile.delete();
+	}
+	
+	public FileConfiguration getUnclaimedArenaContainerConfig(String arenaName) {
+		arenaName = arenaName.toLowerCase();
+		File unclaimedDataFile = new File(getDataFolder() + File.separator + "unclaimeddata" + File.separator, arenaName + ".yml");
+		if(!unclaimedDataFile.exists()) {
+			try {
+				unclaimedDataFile.getParentFile().mkdirs();
+				unclaimedDataFile.createNewFile();
+			}
+			catch(IOException e) {
+				return null;
+			}
+		}
+		FileConfiguration unclaimedDataConfig = new YamlConfiguration();
+		try {
+			unclaimedDataConfig.load(unclaimedDataFile);
+		}
+		catch(IOException | InvalidConfigurationException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return unclaimedDataConfig;
+	}
+	
+	public boolean addPlayerToArenaQueue(String arenaName, Player ply) {
+		arenaName = arenaName.toLowerCase();
+		//if(isSpectating(ply) == null && getEditMode(ply) == null) {
+			if(!getArenaObj(arenaName).inProgress) {
+				if(getArenaObj(arenaName).getPlayers().containsKey(ply)) {
+					writeMessage(ply, "You are already queued in this arena!");
+					getArenaObj(arenaName).updateSigns();
+					return false;
+				}
+				else if(playerIsPlaying(ply) != null || playerIsQueued(ply) != null) {
+					writeMessage(ply, "You are already in another arena!");
+					getArenaObj(arenaName).updateSigns();
+					return false;
+				}
+				else if(getArenaObj(arenaName).players.size() >= getArenaConfigInt(arenaName, "maxPlayers")) {
+					writeMessage(ply, "This arena queue is full!");
+					getArenaObj(arenaName).updateSigns();
+					return false;
+				}
+				PGGrifblockArena arena = getArenaObj(arenaName);
+				arena.messageAllPlayers(ply.getName() + " has entered the queue for " + getArenaConfigFile(arenaName).getString("name") + "!\n(" + (arena.getPlayers().size()+1) + "/" + getArenaConfigInt(arenaName, "maxPlayers") + ")");
+				arena.players.put(ply, new PGGrifblockPlayer(this, arena, ply));
+				writeMessage(ply, "You have joined the queue for " + getArenaConfigFile(arenaName).getString("name") + "!\n(" + arena.getPlayers().size() + "/" + getArenaConfigInt(arenaName, "maxPlayers") + ")");
+				getArenaObj(arenaName).checkToStart();
+				return true;
+			}
+			else {
+				writeMessage(ply, getArenaConfigFile(arenaName).getString("name") + " is already in progress!");
+				getArenaObj(arenaName).updateSigns();
+				return false;
+			}
+	}
+	
+	public boolean removePlayerFromArenaQueue(String arenaName, Player ply, boolean died) {
+		arenaName = arenaName.toLowerCase();
+		ply.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+		if(!getArenaObj(arenaName).inProgress) {
+			if(!getArenaObj(arenaName).getPlayers().containsKey(ply)) {
+				writeMessage(ply, "You aren't queued in this arena!");
+				getArenaObj(arenaName).updateSigns();
+				return false;
+			}
+			PGGrifblockArena arena = getArenaObj(arenaName);
+			arena.players.remove(ply);
+			arena.messageAllPlayers(ply.getName() + " has left the queue for " + getArenaConfigFile(arenaName).getString("name") + "!\n(" + arena.getPlayers().size() + "/" + getArenaConfigInt(arenaName, "maxPlayers") + ")");
+			writeMessage(ply, "You have left the queue for " + getArenaConfigFile(arenaName).getString("name") + "!");
+			arena.checkToStart();
+			arena.checkToEnd();
+		}
+		else {
+			getArenaObj(arenaName).bootPlayer(ply, died);
+		}
+		return true;
+	}
+	
+	public double getArenaConfigDouble(String arenaName, String configKey) {
+		FileConfiguration arenaConfig = getArenaConfigFile(arenaName);
+		if(arenaConfig.getKeys(false).contains(configKey)) {
+			return arenaConfig.getDouble(configKey);
+		}
+		else {
+			return getConfig().getDouble(configKey);
+		}
+	}
+	public int getArenaConfigInt(String arenaName, String configKey) {
+		FileConfiguration arenaConfig = getArenaConfigFile(arenaName);
+		if(arenaConfig.getKeys(false).contains(configKey)) {
+			return arenaConfig.getInt(configKey);
+		}
+		else {
+			return getConfig().getInt(configKey);
+		}
+	}
+	
+	public boolean isArenaSign(Block signBlock) {
+		if(signBlock.getType().toString().toLowerCase().contains("sign")) {
+			Sign sign = (Sign) signBlock.getState();
+			if(sign.getLine(0).equals(ChatColor.translateAlternateColorCodes('&', getConfig().getString("signTitle")))) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public void editSign(Block signBlock, int line, String message) {
+		if(signBlock.getType().toString().toLowerCase().contains("sign")) {
+			Sign sign = (Sign) signBlock.getState();
+			sign.setLine(line, message);
+			sign.update();
+		}
 	}
 	
 	public String isInEditMode(Player ply) {
@@ -76,6 +258,24 @@ public class PGGrifblock extends JavaPlugin {
 				ply.getInventory().addItem(item);
 			}
 		}
+	}
+	
+	public PGGrifblockArena playerIsQueued(Player ply) {
+		for(String arenaName : arenas.keySet()) {
+			if(getArenaObj(arenaName).getPlayers().containsKey(ply) && !getArenaObj(arenaName).inProgress) {
+				return getArenaObj(arenaName);
+			}
+		}
+		return null;
+	}
+	
+	public PGGrifblockArena playerIsPlaying(Player ply) {
+		for(String arenaName : arenas.keySet()) {
+			if(getArenaObj(arenaName).getPlayers().containsKey(ply) && getArenaObj(arenaName).inProgress) {
+				return getArenaObj(arenaName);
+			}
+		}
+		return null;
 	}
 	
 	public File getArenaFile(String arenaName) {
@@ -247,5 +447,44 @@ public class PGGrifblock extends JavaPlugin {
 			}
 		}
 		return false;
+	}
+	
+	public double getRandDouble() {
+		Random r = new Random();
+		r.setSeed(r.nextInt((int) System.currentTimeMillis()));
+		int negativeOrPositive = r.nextInt(2);
+		if(negativeOrPositive == 1)
+			return r.nextDouble();
+		else
+			return -(r.nextDouble());
+	}
+	
+	public int getRandNum(int min, int max) {
+
+		if (min > max) {
+			throw new IllegalArgumentException("max must be greater than min");
+		}
+
+		Random r = new Random();
+		r.setSeed(r.nextInt((int) System.currentTimeMillis()));
+		return r.nextInt((max - min) + 1) + min;
+	}
+	
+	public int boolToInt(boolean bool) {
+		if(bool)
+			return 1;
+		return 0;
+	}
+	
+	public boolean isNumeric(String strNum) {
+	    if (strNum == null) {
+	        return false;
+	    }
+	    try {
+	        Double.parseDouble(strNum);
+	    } catch (NumberFormatException nfe) {
+	        return false;
+	    }
+	    return true;
 	}
 }
