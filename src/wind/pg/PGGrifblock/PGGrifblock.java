@@ -11,6 +11,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
@@ -21,9 +23,23 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 import wind.pg.PGGrifblock.commands.PGGrifblockCommands;
+import wind.pg.PGGrifblock.events.PGGrifblockBlockBreakEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockDropItemEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockEntityHitByEntityEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockInventoryClickEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockMobSpawnEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockPickupItemEvent;
 import wind.pg.PGGrifblock.events.PGGrifblockPlayerClickBlockEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockPlayerCommandSendEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockPlayerDeathEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockPlayerFoodLevelChangeEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockPlayerJoinEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockPlayerMoveEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockPlayerQuitEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockSignChangeEvent;
 
 public class PGGrifblock extends JavaPlugin {
 	Map<String, PGGrifblockArena> arenas = new HashMap<String, PGGrifblockArena>();
@@ -38,14 +54,27 @@ public class PGGrifblock extends JavaPlugin {
 		getCommand("pggb").setExecutor(new PGGrifblockCommands(this));
 		
 		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerClickBlockEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockBlockBreakEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockMobSpawnEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerDeathEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockPickupItemEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerMoveEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockDropItemEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockEntityHitByEntityEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerCommandSendEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerJoinEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerQuitEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockSignChangeEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerFoodLevelChangeEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockInventoryClickEvent(this), this);
 		
 		this.saveDefaultConfig();
 		
 		Map<Material, String> editingTools = new HashMap<Material, String>();
 		editingTools.put(Material.BARRIER, "Bounds");
-		editingTools.put(Material.GOLD_BLOCK, "Player Spawn");
-		//editingTools.put(Material.EMERALD_BLOCK, "Mob Spawns");
-		//editingTools.put(Material.ENDER_CHEST, "Mystery Blocks");
+		editingTools.put(Material.REDSTONE_BLOCK, "RED Spawn");
+		editingTools.put(Material.LAPIS_BLOCK, "BLUE Spawn");
+		editingTools.put(Material.GLOWSTONE, "Grifblock Spawn");
 		for(Material mat : editingTools.keySet()) {
 			ItemStack itemToAdd = new ItemStack(mat, 1);
 			ItemMeta itemToAddMeta = itemToAdd.getItemMeta();
@@ -58,6 +87,60 @@ public class PGGrifblock extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		getServer().getConsoleSender().sendMessage("PGGrifblock unloaded!");
+		
+		for(String arenaName : arenas.keySet()) {
+			getArenaObj(arenaName).endArena();
+		}
+		this.clearArenas();
+	}
+	
+	public void doHammerSmash(Player ply) {
+		if(ply.getAttackCooldown() == 1.0) {
+			PGGrifblockArena arena = this.playerIsPlaying(ply);
+			Location hammerLocation = ply.getLocation().clone().add(ply.getLocation().getDirection().multiply(2));
+			hammerLocation.add(0, 1.5, 0);
+			//this.printToConsole(hammerLocation.toString());
+			for(int i = 0; i < 8; i++)
+				ply.getWorld().spawnParticle(Particle.SMOKE_LARGE, hammerLocation.clone().add(this.getRandDouble(), this.getRandDouble(), this.getRandDouble()), 1);
+			ply.getWorld().playSound(hammerLocation, Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 2.0F, 2.0F);
+			Vector plyDirVec = ply.getLocation().subtract(hammerLocation).toVector().multiply(0.5);
+			ply.setVelocity(plyDirVec.add(new Vector(0,0.25,0)));
+			for(Player other : arena.getPlayers().keySet()) {
+				if(!other.equals(ply)) {
+					//this.printToConsole("dist " + other.getLocation().distance(hammerLocation));
+					double distFromHammer = other.getLocation().add(0, 1.5, 0).distance(hammerLocation);
+					if(distFromHammer <= 3.25) {
+						Vector dirVec = other.getLocation().subtract(hammerLocation).toVector();
+						other.setVelocity(dirVec.add(new Vector(0,0.25,0)));
+						other.damage(25/(distFromHammer));
+						//this.printToConsole("damage " + 15/(distFromHammer));
+					}
+				}
+			}
+		}
+	}
+	
+	public void doMeleeSlide(Player ply, Player hit, String type) {
+		if(ply.getAttackCooldown() == 1.0) {
+			//PGGrifblockArena arena = this.playerIsPlaying(ply);
+			Location hammerLocation = ply.getLocation().clone().add(ply.getLocation().getDirection().multiply(2));
+			hammerLocation.add(0, 1.5, 0);
+			
+			Particle particleType = Particle.CRIT_MAGIC;
+			Sound soundType = Sound.BLOCK_ANVIL_LAND;
+			if(type.equals("Energy Sword")) {
+				particleType = Particle.CRIT;
+				soundType = Sound.ENTITY_LIGHTNING_BOLT_IMPACT;
+			}
+			for(int i = 0; i < 8; i++)
+				ply.getWorld().spawnParticle(particleType, hammerLocation.clone().add(this.getRandDouble(), this.getRandDouble(), this.getRandDouble()), 1);
+			ply.getWorld().playSound(hammerLocation, soundType, 2.0F, 2.0F);
+			
+			
+			Vector dirVec = hammerLocation.subtract(ply.getLocation()).toVector().multiply(0.25);
+			ply.setVelocity(dirVec);
+			hit.damage(20.0);
+		}
 	}
 	
 	public void createUnclaimedData(Player ply) {
@@ -195,7 +278,7 @@ public class PGGrifblock extends JavaPlugin {
 			arena.checkToEnd();
 		}
 		else {
-			getArenaObj(arenaName).bootPlayer(ply, died);
+			getArenaObj(arenaName).bootPlayer(ply);
 		}
 		return true;
 	}
@@ -415,6 +498,28 @@ public class PGGrifblock extends JavaPlugin {
 		}
 	}
 	
+	public boolean locationNearby(Location setLoc, Location toCheck) {
+		Location bounds1Loc = setLoc.clone().add(1.5, 1.5, 1.5);
+		Location bounds2Loc = setLoc.clone().add(-1.5, -1.5, -1.5);
+		double x1 = bounds1Loc.getX();
+		double y1 = bounds1Loc.getY();
+		double z1 = bounds1Loc.getZ();
+
+		double x2 = bounds2Loc.getX();
+		double y2 = bounds2Loc.getY();
+		double z2 = bounds2Loc.getZ();
+		
+		double xP = toCheck.getX();
+		double yP = toCheck.getY();
+		double zP = toCheck.getZ();
+		
+		if(((x1 <= xP && xP <= x2) || (x1 >= xP && xP >= x2)) && ((y1 <= yP && yP <= y2) || (y1 >= yP && yP >= y2)) && ((z1 <= zP && zP <= z2) || (z1 >= zP && zP >= z2))){
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	public void clearArenas() {
 		for(String arenaName : arenas.keySet()) {
 			Bukkit.getScheduler().cancelTask(getArenaObj(arenaName).queueTimer);
@@ -486,5 +591,9 @@ public class PGGrifblock extends JavaPlugin {
 	        return false;
 	    }
 	    return true;
+	}
+	
+	public void printToConsole(String str) {
+		getServer().getConsoleSender().sendMessage(str);
 	}
 }

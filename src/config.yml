@@ -9,9 +9,9 @@ waitTime: 15
 # The maximum amount of players that can join an arena.
 maxPlayers: 8
 # The minimum amount of players to start an arena.
-minPlayers: 1
-# The amount of seconds to wait before starting the next wave.
-waveGraceTime: 20
+minPlayers: 2
+# The amount of seconds to wait before starting the next round.
+roundGraceTime: 5
 
 # A list of arena award commands to execute.
 # #wave - get the number of the wave.

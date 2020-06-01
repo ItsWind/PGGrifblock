@@ -3,6 +3,7 @@ package wind.pg.PGGrifblock.commands;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -20,6 +21,9 @@ public class PGGrifblockCommands implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(sender.hasPermission("pggb.player")) {
+			if(args.length > 0 && args[0].equalsIgnoreCase("add")) {
+				plugin.addPlayerToArenaQueue("grifword", Bukkit.getPlayer(args[1]));
+			}
 			if(args.length < 1 || args[0].equalsIgnoreCase("help")) {
 				String helpString = "";
 				Map<String, String> commandStrings = new HashMap<String, String>();
