@@ -6,6 +6,7 @@ description: Grifblock
 author: Windwhistle_
 commands:
   pggb:
+   aliases: [gb]
    description: PGGrifblock commands
    permission-message: You do not have permission!
 permissions:

@@ -40,4 +40,17 @@ public class PGGrifblockPlayerMoveEvent implements Listener {
 			}
 		}
 	}
+	
+	@EventHandler
+	public void onPlyMoveSpectate(PlayerMoveEvent event) {
+		Player ply = event.getPlayer();
+		if(plugin.isSpectating(ply) != null) {
+			Location from = event.getFrom();
+			Location to = event.getTo();
+			if(plugin.isInArena(to) == null) {
+				event.setTo(from);
+				plugin.writeMessage(ply, "You can't exit the arena as a spectator!");
+			}
+		}
+	}
 }

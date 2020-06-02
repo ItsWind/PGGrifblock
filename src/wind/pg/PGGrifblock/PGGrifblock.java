@@ -9,6 +9,7 @@ import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -26,6 +27,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import wind.pg.PGGrifblock.commands.PGGrifblockCommands;
+import wind.pg.PGGrifblock.commands.PGGrifblockTabCompletion;
 import wind.pg.PGGrifblock.events.PGGrifblockBlockBreakEvent;
 import wind.pg.PGGrifblock.events.PGGrifblockBlockPlaceEvent;
 import wind.pg.PGGrifblock.events.PGGrifblockDropItemEvent;
@@ -48,11 +50,14 @@ public class PGGrifblock extends JavaPlugin {
 	ArrayList<ItemStack> editingInventory = new ArrayList<ItemStack>();
 	Map<Player, String> editingPlayers = new HashMap<Player, String>();
 	Map<Player, ItemStack[]> editingPlayersInvs = new HashMap<Player, ItemStack[]>();
+	Map<Player, String> spectatingPlayers = new HashMap<Player, String>();
+	Map<Player, Location> oldSpectatingLocs = new HashMap<Player, Location>();
 	
 	@Override
 	public void onEnable() {
 		getServer().getConsoleSender().sendMessage("PGGrifblock loaded!");
 		getCommand("pggb").setExecutor(new PGGrifblockCommands(this));
+		getCommand("pggb").setTabCompleter(new PGGrifblockTabCompletion(this));
 		
 		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerClickBlockEvent(this), this);
 		getServer().getPluginManager().registerEvents(new PGGrifblockBlockBreakEvent(this), this);
@@ -94,6 +99,8 @@ public class PGGrifblock extends JavaPlugin {
 			getArenaObj(arenaName).endArena();
 		}
 		this.clearArenas();
+		this.bootAllEditMode();
+		this.bootAllSpectating();
 	}
 	
 	public void doHammerSmash(Player ply) {
@@ -322,27 +329,74 @@ public class PGGrifblock extends JavaPlugin {
 		}
 	}
 	
+	public String isSpectating(Player ply) {
+		return spectatingPlayers.get(ply);
+	}
+
+	public void toggleSpectating(Player ply, String arenaName) {
+		toggleSpectating(ply, arenaName, true);
+	}
+	public void toggleSpectating(Player ply, String arenaName, boolean removeBool) {
+		if(isSpectating(ply) != null) {
+			if(removeBool)
+				spectatingPlayers.remove(ply);
+			ply.setGameMode(GameMode.SURVIVAL);
+			ply.teleport(oldSpectatingLocs.get(ply));
+			oldSpectatingLocs.remove(ply);
+			removeUnclaimedData(ply);
+		}
+		else {
+			spectatingPlayers.put(ply, arenaName);
+			oldSpectatingLocs.put(ply, ply.getLocation());
+			setUnclaimedData(ply, "oldLoc", ply.getLocation());
+			setUnclaimedData(ply, "wasSpectating", true);
+			ply.setGameMode(GameMode.SPECTATOR);
+	    	//List<Double> telCords = getArenaCordData(arenaName, "playerSpawn");
+	    	//Location telLoc = new Location(getArenaWorld(arenaName), telCords.get(0), telCords.get(1)+1, telCords.get(2));
+			Location telLoc = this.getArenaBlockLocation(arenaName, "grifblockSpawn");
+	    	ply.teleport(telLoc);
+		}
+	}
+	
+	public void bootAllSpectating() {
+		for(Player ply : spectatingPlayers.keySet()) {
+			toggleSpectating(ply, null, false);
+		}
+		spectatingPlayers.clear();
+	}
+	
 	public String isInEditMode(Player ply) {
 		return editingPlayers.get(ply);
 	}
 	
 	public void toggleEditMode(Player ply, String arenaName) {
+		toggleEditMode(ply, arenaName, true);
+	}
+	public void toggleEditMode(Player ply, String arenaName, boolean removeBool) {
 		if(isInEditMode(ply) != null) {
-			editingPlayers.remove(ply);
+			if(removeBool)
+				editingPlayers.remove(ply);
 			ply.getInventory().setContents(editingPlayersInvs.get(ply));
 			editingPlayersInvs.remove(ply);
-			//removeUnclaimedData(ply);
+			removeUnclaimedData(ply);
 		}
 		else {
 			arenas.remove(arenaName);
 			editingPlayers.put(ply, arenaName);
 			editingPlayersInvs.put(ply, ply.getInventory().getContents());
-			//setUnclaimedData(ply, "oldInv", ply.getInventory().getContents());
+			setUnclaimedData(ply, "oldInv", ply.getInventory().getContents());
 			ply.getInventory().clear();
 			for(ItemStack item : editingInventory) {
 				ply.getInventory().addItem(item);
 			}
 		}
+	}
+	
+	public void bootAllEditMode() {
+		for(Player ply : editingPlayers.keySet()) {
+			toggleEditMode(ply, null, false);
+		}
+		editingPlayers.clear();
 	}
 	
 	public PGGrifblockArena playerIsQueued(Player ply) {

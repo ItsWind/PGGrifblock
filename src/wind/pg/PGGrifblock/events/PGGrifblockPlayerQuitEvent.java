@@ -27,8 +27,8 @@ public class PGGrifblockPlayerQuitEvent implements Listener {
 			plugin.toggleEditMode(ply, null);
 		}
 		
-		/*if(plugin.isSpectating(ply) != null) {
-			plugin.toggleSpectating(ply);
-		}*/
+		if(plugin.isSpectating(ply) != null) {
+			plugin.toggleSpectating(ply, null);
+		}
 	}
 }

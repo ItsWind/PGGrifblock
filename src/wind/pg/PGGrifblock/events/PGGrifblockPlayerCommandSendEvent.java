@@ -16,7 +16,7 @@ public class PGGrifblockPlayerCommandSendEvent implements Listener {
 	@EventHandler
 	public void onPlySendCommand(PlayerCommandPreprocessEvent event) {
 		Player ply = event.getPlayer();
-		if(plugin.playerIsPlaying(ply) != null) {
+		if(plugin.playerIsPlaying(ply) != null || plugin.isSpectating(ply) != null) {
 			String[] commandArgs = event.getMessage().split(" ");
 			if(!commandArgs[0].equalsIgnoreCase("/pggb")) {
 				if(!ply.hasPermission("pggb.bypass")) {

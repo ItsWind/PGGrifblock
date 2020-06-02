@@ -31,7 +31,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 				commandStrings.put("join", "Queues you for an arena.");
 				commandStrings.put("leave", "Disconnects you from any current arena.");
 				commandStrings.put("spectate", "Toggles spectating of an arena.");
-				commandStrings.put("top", "Shows top five scores for the given arena.");
+				//commandStrings.put("top", "Shows top five scores for the given arena.");
 				commandStrings.put("admin|tp", "Teleport to the given arena.");
 				commandStrings.put("admin|create", "Creates an arena with the given name.");
 				commandStrings.put("admin|edit", "Toggles edit mode for the arena you're currently standing in or with the given name.");
@@ -65,6 +65,26 @@ public class PGGrifblockCommands implements CommandExecutor {
 						if(args.length > 1 && plugin.arenaExists(args[1])) {
 							String arenaName = args[1];
 							plugin.addPlayerToArenaQueue(arenaName, ply);
+						}
+						else {
+							plugin.writeMessage(ply, "No arena found.");
+						}
+					}
+				}
+			}
+			else if(args[0].equalsIgnoreCase("spectate")) {
+				if(sender instanceof Player) {
+					Player ply = (Player) sender;
+					if(plugin.playerIsPlaying(ply) == null && plugin.playerIsQueued(ply) == null && plugin.isInEditMode(ply) == null) {
+						if(plugin.isSpectating(ply) != null) {
+							plugin.toggleSpectating(ply, null);
+							plugin.writeMessage(ply, "You have stopped spectating!");
+							return false;
+						}
+						if(args.length > 1 && plugin.arenaExists(args[1])) {
+							String arenaName = args[1];
+							plugin.writeMessage(ply, "You are now spectating " + arenaName + "! Use /pggb spectate whenever you want to exit!");
+							plugin.toggleSpectating(ply, arenaName);
 						}
 						else {
 							plugin.writeMessage(ply, "No arena found.");
