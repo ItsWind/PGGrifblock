@@ -6,9 +6,11 @@ import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.attribute.Attribute;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -33,23 +35,77 @@ public class PGGrifblockPlayer {
 		this.ply = ply;
 	}
 	
+	boolean isDead = false;
+	int plyDeathTimer = -1;
+	
 	boolean hasGrifblock = false;
+	int grifblockShieldDamageTimer = -1;
+	int grifblockShieldRegenTimer = -1;
+	
+	public void die() {
+		isDead = true;
+		ply.setGameMode(GameMode.SPECTATOR);
+		plyDeathTimer = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+			@Override
+			public void run() {
+				if(!arena.nextRoundPhase && plugin.playerIsPlaying(ply) != null) {
+					isDead = false;
+					resetInArena();
+				}
+			}
+		}, 4*20);
+	}
+	
+	public void setShieldTimer() {
+		if(this.hasGrifblock()) {
+			if(grifblockShieldDamageTimer != -1)
+				Bukkit.getScheduler().cancelTask(grifblockShieldDamageTimer);
+			grifblockShieldDamageTimer = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+				@Override
+				public void run() {
+					grifblockShieldDamageTimer = -1;
+					regenShield();
+				}
+			}, 5*20);
+		}
+	}
+	private void regenShield() {
+		if(this.hasGrifblock()) {
+			if(grifblockShieldRegenTimer != -1)
+				Bukkit.getScheduler().cancelTask(grifblockShieldRegenTimer);
+			grifblockShieldRegenTimer = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+				@Override
+				public void run() {
+					if(hasGrifblock() && grifblockShieldDamageTimer == -1 && ply.getAbsorptionAmount() < 10.0) {
+						if(ply.getAbsorptionAmount() >= 9.0) {
+							for(int i = 0; i < 8; i++)
+								ply.getWorld().spawnParticle(Particle.HEART, ply.getLocation().clone().add(plugin.getRandDouble(), plugin.getRandDouble(), plugin.getRandDouble()), 1);
+							ply.getWorld().playSound(ply.getLocation(), Sound.BLOCK_BELL_RESONATE, 2.0F, 2.0F);
+						}
+						if(ply.getAbsorptionAmount()+1 > 10.0)
+							ply.setAbsorptionAmount(10.0);
+						else
+							ply.setAbsorptionAmount(ply.getAbsorptionAmount()+1);
+					}
+					else {
+						Bukkit.getScheduler().cancelTask(grifblockShieldRegenTimer);
+						grifblockShieldRegenTimer = -1;
+					}
+				}
+			}, 0, 1*20);
+		}
+	}
 	
 	public void setTeamHelmet() {
-		plugin.printToConsole("putting helmet");
 		ItemStack helmetItem = new ItemStack(Material.LEATHER_HELMET, 1);
 		LeatherArmorMeta itemMeta = (LeatherArmorMeta) helmetItem.getItemMeta();
 		if(team.equals("RED")) {
-			plugin.printToConsole("red helmet");
 			itemMeta.setColor(Color.fromRGB(255, 0, 0));
 		}
 		else {
-			plugin.printToConsole("blue helmet");
 			itemMeta.setColor(Color.fromRGB(0, 0, 255));
 		}
-		plugin.printToConsole("setting helmet");
 		helmetItem.setItemMeta(itemMeta);
-		plugin.printToConsole("on helmet");
 		ply.getInventory().setHelmet(helmetItem);
 	}
 	
@@ -71,17 +127,15 @@ public class PGGrifblockPlayer {
 			arena.grifblock = ply;
 			ply.setGlowing(true);
 			ply.getInventory().clear();
+			this.setTeamHelmet();
         	ply.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, (6000*20), 0));
-        	ply.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(30.0);
-        	ply.setHealth(30.0);
+        	ply.setAbsorptionAmount(10.0);
 		}
 		else {
 			ply.setGlowing(false);
 			ply.getInventory().remove(Material.GLOWSTONE);
 			ply.removePotionEffect(PotionEffectType.SPEED);
-        	ply.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20.0);
-        	ply.setHealth(20.0);
-			//arena.equipStarterKit(ply);
+			ply.setAbsorptionAmount(0);
 		}
 	}
 	
@@ -126,11 +180,12 @@ public class PGGrifblockPlayer {
 			Location spawnLoc = plugin.getArenaBlockLocation(arena.arenaName, this.team+"Spawn").add(0,1.5,0);
 			ply.getInventory().clear();
 			arena.equipStarterKit(ply);
-        	ply.setHealth(20);
 			ply.setFireTicks(0);
 			dropGrifblock();
 			ply.teleport(spawnLoc);
+			ply.setGameMode(GameMode.SURVIVAL);
 			ply.setVelocity(new Vector(0,0,0));
+        	ply.setHealth(20);
 		}
 	}
 }

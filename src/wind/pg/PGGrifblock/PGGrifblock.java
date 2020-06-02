@@ -27,6 +27,7 @@ import org.bukkit.util.Vector;
 
 import wind.pg.PGGrifblock.commands.PGGrifblockCommands;
 import wind.pg.PGGrifblock.events.PGGrifblockBlockBreakEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockBlockPlaceEvent;
 import wind.pg.PGGrifblock.events.PGGrifblockDropItemEvent;
 import wind.pg.PGGrifblock.events.PGGrifblockEntityHitByEntityEvent;
 import wind.pg.PGGrifblock.events.PGGrifblockInventoryClickEvent;
@@ -67,6 +68,7 @@ public class PGGrifblock extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new PGGrifblockSignChangeEvent(this), this);
 		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerFoodLevelChangeEvent(this), this);
 		getServer().getPluginManager().registerEvents(new PGGrifblockInventoryClickEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockBlockPlaceEvent(this), this);
 		
 		this.saveDefaultConfig();
 		
@@ -102,7 +104,7 @@ public class PGGrifblock extends JavaPlugin {
 			//this.printToConsole(hammerLocation.toString());
 			for(int i = 0; i < 8; i++)
 				ply.getWorld().spawnParticle(Particle.SMOKE_LARGE, hammerLocation.clone().add(this.getRandDouble(), this.getRandDouble(), this.getRandDouble()), 1);
-			ply.getWorld().playSound(hammerLocation, Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 2.0F, 2.0F);
+			ply.getWorld().playSound(hammerLocation, Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 2.0F, 0.3F);
 			Vector plyDirVec = ply.getLocation().subtract(hammerLocation).toVector().multiply(0.5);
 			ply.setVelocity(plyDirVec.add(new Vector(0,0.25,0)));
 			for(Player other : arena.getPlayers().keySet()) {
@@ -112,7 +114,7 @@ public class PGGrifblock extends JavaPlugin {
 					if(distFromHammer <= 3.25) {
 						Vector dirVec = other.getLocation().subtract(hammerLocation).toVector();
 						other.setVelocity(dirVec.add(new Vector(0,0.25,0)));
-						other.damage(25/(distFromHammer));
+						other.damage(20/(distFromHammer));
 						//this.printToConsole("damage " + 15/(distFromHammer));
 					}
 				}
@@ -126,15 +128,15 @@ public class PGGrifblock extends JavaPlugin {
 			Location hammerLocation = ply.getLocation().clone().add(ply.getLocation().getDirection().multiply(2));
 			hammerLocation.add(0, 1.5, 0);
 			
-			Particle particleType = Particle.CRIT_MAGIC;
-			Sound soundType = Sound.BLOCK_ANVIL_LAND;
+			Particle particleType = Particle.CRIT;
+			Sound soundType = Sound.ENTITY_PLAYER_BIG_FALL;
 			if(type.equals("Energy Sword")) {
-				particleType = Particle.CRIT;
-				soundType = Sound.ENTITY_LIGHTNING_BOLT_IMPACT;
+				particleType = Particle.CRIT_MAGIC;
+				soundType = Sound.ITEM_TRIDENT_RIPTIDE_1;
 			}
 			for(int i = 0; i < 8; i++)
 				ply.getWorld().spawnParticle(particleType, hammerLocation.clone().add(this.getRandDouble(), this.getRandDouble(), this.getRandDouble()), 1);
-			ply.getWorld().playSound(hammerLocation, soundType, 2.0F, 2.0F);
+			ply.getWorld().playSound(hammerLocation, soundType, 2.0F, 1.25F);
 			
 			
 			Vector dirVec = hammerLocation.subtract(ply.getLocation()).toVector().multiply(0.25);

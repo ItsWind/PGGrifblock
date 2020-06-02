@@ -76,6 +76,7 @@ public class PGGrifblockArena {
 	
 	int queueTimer = -1;
 	int roundGraceTimer = -1;
+	public boolean nextRoundPhase = false;
 	public int round = 1;
 	Map<Player, Location> oldLocs = new HashMap<Player, Location>();
 	Map<Player, ItemStack[]> oldInvs = new HashMap<Player, ItemStack[]>();
@@ -154,7 +155,7 @@ public class PGGrifblockArena {
 		if(this.inProgress && (blueTeam.size() < 1 || redTeam.size() < 1)) {
 			endArena();
 		}
-		if(round > 5) {
+		if(round > plugin.getArenaConfigInt(arenaName, "roundsToPlay")) {
 			if(teamScores.get("RED") > teamScores.get("BLUE"))
 				winArena("RED");
 			else
@@ -202,13 +203,14 @@ public class PGGrifblockArena {
         	ply.teleport(plugin.getArenaBlockLocation(arenaName, this.getPlayerObj(ply).getTeam()+"Spawn").add(0,1.5,0));
         	equipStarterKit(ply);
         	ply.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, (6000*20), 0));
-        	ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, (6000*20), 0));
+        	//ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, (6000*20), 0));
         }
         this.updateScoreboards();
         startRound();
 	}
 	
 	public void startRound() {
+		nextRoundPhase = false;
 		for(Player ply : players.keySet()) {
 			getPlayerObj(ply).resetInArena();
 		}
@@ -222,14 +224,17 @@ public class PGGrifblockArena {
 	}
 	
 	public void nextRound() {
-		messageAllPlayers("You have " + plugin.getArenaConfigInt(arenaName, "roundGraceTime") + " seconds before the next round starts...");
+		nextRoundPhase = true;
 		round += 1;
-		roundGraceTimer = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			@Override
-			public void run() {
-				startRound();
-			}
-		}, plugin.getArenaConfigInt(arenaName, "roundGraceTime")*20);
+		if(round <= plugin.getArenaConfigInt(arenaName, "roundsToPlay")) {
+			messageAllPlayers("You have " + plugin.getArenaConfigInt(arenaName, "roundGraceTime") + " seconds before the next round starts...");
+			roundGraceTimer = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+				@Override
+				public void run() {
+					startRound();
+				}
+			}, plugin.getArenaConfigInt(arenaName, "roundGraceTime")*20);
+		}
 		checkToEnd();
 	}
 	
@@ -247,6 +252,7 @@ public class PGGrifblockArena {
 	public void endArena() {
 		inProgress = false;
 		round = 1;
+		nextRoundPhase = false;
 		updateSigns();
 		this.bootAllPlayers();
 		teamScores.put("RED", 0);

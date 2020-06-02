@@ -18,11 +18,11 @@ public class PGGrifblockEntityHitByEntityEvent implements Listener {
 	public void onPlyHitPly(EntityDamageByEntityEvent event) {
 		if(event.getEntity() instanceof Player && plugin.playerIsPlaying((Player) event.getEntity()) != null) {
 			if(event.getDamager() instanceof Player && plugin.playerIsPlaying((Player) event.getDamager()) != null) {
-				event.setDamage(0);
-				event.setCancelled(true);
 				Player ply = (Player) event.getDamager();
 				Player hit = (Player) event.getEntity();
 				if(!ply.getInventory().getItemInMainHand().getType().equals(Material.AIR)) {
+					event.setDamage(0);
+					event.setCancelled(true);
 					String itemName = ply.getInventory().getItemInMainHand().getItemMeta().getDisplayName();
 					if(itemName.equals("Gravity Hammer")) {
 						plugin.doHammerSmash(ply);

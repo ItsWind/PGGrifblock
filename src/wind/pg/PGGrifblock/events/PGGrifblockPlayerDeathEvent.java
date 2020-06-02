@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 
 import wind.pg.PGGrifblock.PGGrifblock;
 
@@ -15,12 +16,24 @@ public class PGGrifblockPlayerDeathEvent implements Listener {
 	}
 	
 	@EventHandler
+	public void onPlyArenaFall(EntityDamageEvent event) {
+		if(event.getEntity() instanceof Player && plugin.playerIsPlaying((Player) event.getEntity()) != null) {
+			//Player ply = (Player) event.getEntity();
+			if(event.getCause() == DamageCause.FALL) {
+				event.setCancelled(true);
+			}
+		}
+	}
+	
+	@EventHandler
 	public void onPlyArenaDeath(EntityDamageEvent event) {
 		if(event.getEntity() instanceof Player && plugin.playerIsPlaying((Player)event.getEntity()) != null) {//plugin.playingPlayers.containsKey((Player) event.getEntity())) {
 			Player ply = (Player) event.getEntity();
+			if(event.getDamage() > 0)
+				plugin.playerIsPlaying(ply).getPlayerObj(ply).setShieldTimer();
 			if(ply.getHealth() - event.getDamage() < 0.5) {
 				event.setCancelled(true);
-				plugin.playerIsPlaying(ply).getPlayerObj(ply).resetInArena();
+				plugin.playerIsPlaying(ply).getPlayerObj(ply).die();
 			}
 		}
 	}

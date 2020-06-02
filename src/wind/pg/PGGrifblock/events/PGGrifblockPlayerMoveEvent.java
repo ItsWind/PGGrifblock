@@ -32,7 +32,7 @@ public class PGGrifblockPlayerMoveEvent implements Listener {
 					spawnToCheck = plugin.getArenaBlockLocation(arena.arenaName, "REDSpawn");
 				if(plugin.locationNearby(spawnToCheck, ply.getLocation())) {
 					plyObj.toggleGrifblock();
-					ply.getWorld().createExplosion(spawnToCheck.clone().add(0, 1, 0), 4F, false, false);
+					ply.getWorld().createExplosion(spawnToCheck.clone().add(0, 2, 0), 16F, false, false);
 					arena.teamScores.put(plyObj.getTeam(), arena.teamScores.get(plyObj.getTeam())+1);
 					arena.nextRound();
 					arena.updateScoreboards();
