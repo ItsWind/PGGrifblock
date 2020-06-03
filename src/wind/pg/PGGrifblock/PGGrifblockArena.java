@@ -343,6 +343,10 @@ public class PGGrifblockArena {
 	public void bootPlayer(Player ply, String reason) {
 		//addTopScore(ply, wave);
 		//getPlayer(ply).clearPerks();
+		ply.setFireTicks(0);
+		ply.setAbsorptionAmount(0.0);
+		ply.setGlowing(false);
+		ply.removePotionEffect(PotionEffectType.JUMP);
 		if(getPlayerObj(ply).hasGrifblock()) {
 			getPlayerObj(ply).toggleGrifblock();
 			this.spawnGrifblock();
@@ -394,12 +398,6 @@ public class PGGrifblockArena {
 		else {
 			plugin.writeMessage(ply, "You lost!");
 		}
-		ply.setHealth(20.0);
-		ply.setFireTicks(0);
-		ply.setAbsorptionAmount(0.0);
-		ply.setGlowing(false);
-		ply.removePotionEffect(PotionEffectType.JUMP);
-		ply.removePotionEffect(PotionEffectType.SLOW_FALLING);
 		checkToEnd();
 	}
 	
