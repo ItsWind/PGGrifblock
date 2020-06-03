@@ -89,6 +89,9 @@ public class PGGrifblock extends JavaPlugin {
 			itemToAdd.setItemMeta(itemToAddMeta);
 			editingInventory.add(itemToAdd);
 		}
+		
+		File arenasFolder = new File(getDataFolder().getAbsolutePath() + File.separator + "arenas");
+		arenasFolder.mkdirs();
 	}
 	
 	@Override

@@ -1,5 +1,6 @@
 package wind.pg.PGGrifblock.commands;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -184,6 +185,38 @@ public class PGGrifblockCommands implements CommandExecutor {
 				//else {
 				//	plugin.writeMessage(ply, "You can't toggle edit mode while playing or queued!");
 				//}
+			}
+			else if(args[0].equalsIgnoreCase("delete")) {
+				if(!sender.hasPermission("pggb.admin")) {
+					plugin.writeMessage(sender, "You have to have the pggb.admin permission to use that!");
+					return false;
+				}
+				if(args.length > 1) {
+					File arenasFolder = new File(plugin.getDataFolder() + File.separator + "arenas" + File.separator);
+					File[] arenaFiles = arenasFolder.listFiles();
+					for(File file : arenaFiles) {
+					    if(file.isFile()) {
+					    	if(file.getName().substring(0, file.getName().lastIndexOf('.')).equalsIgnoreCase(args[1])) {
+					    		if(file.delete()) {
+					    			plugin.writeMessage(sender, args[1] + " has been deleted!");
+					    			return true;
+					    		}
+					    		else {
+					    			plugin.writeMessage(sender, args[1] + " failed to delete for some reason. :(");
+					    			return false;
+					    		}
+					    	}
+					    }
+					}
+					plugin.writeMessage(sender, "No arena has that name! Try again.");
+				}
+				else {
+					plugin.writeMessage(sender, "You have to specify a name for the arena!");
+				}
+			}
+			else {
+				plugin.writeMessage(sender, "That's not a valid command! Try \"/pggb help\" instead!");
+				//plugin.writeMessage(sender, "How did you even get here? Are you some kind of wizard or some shit? Did you type in some fancy characters or whatever the fuck you kids do these days? Do you know how hard it fucking is to make a plugin you trash? I'm sure that you don't, because you wouldn't be sitting here trying to fucking break mine. Stop your shit.");
 			}
 		}
 		return false;
