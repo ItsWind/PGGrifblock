@@ -504,10 +504,15 @@ public class PGGrifblock extends JavaPlugin {
 	
 	public ArrayList<String> allArenaNames() {
 		ArrayList<String> arenaNames = new ArrayList<String>();
-		for(File file : new File(getDataFolder().getAbsolutePath() + File.separator + "arenas").listFiles())
+		File[] fileArray = new File(getDataFolder().getAbsolutePath() + File.separator + "arenas").listFiles();
+		if(fileArray.length < 1)
+			return null;
+		for(File file : new File(getDataFolder().getAbsolutePath() + File.separator + "arenas").listFiles()) {
 			arenaNames.add(file.getName().substring(0, file.getName().lastIndexOf(".")));
-		if(arenaNames.size() > 0)
+		}
+		if(arenaNames.size() > 0) {
 			return arenaNames;
+		}
 		else
 			return null;
 	}
@@ -525,9 +530,11 @@ public class PGGrifblock extends JavaPlugin {
 	}
 	
 	public PGGrifblockArena isInArena(Location loc) {
-		for(String arenaName : this.allArenaNames()) {
-			if(boundCheck(arenaName, loc)) {
-				return getArenaObj(arenaName);
+		if(allArenaNames() != null) {
+			for(String arenaName : this.allArenaNames()) {
+				if(boundCheck(arenaName, loc)) {
+					return getArenaObj(arenaName);
+				}
 			}
 		}
 		return null;
