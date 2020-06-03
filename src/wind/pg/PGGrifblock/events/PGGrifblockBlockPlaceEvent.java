@@ -14,6 +14,9 @@ public class PGGrifblockBlockPlaceEvent implements Listener {
 	
 	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent event) {
+		if(plugin.playerIsPlaying(event.getPlayer()) != null) {
+			event.setCancelled(true);
+		}
 		if(!event.getPlayer().hasPermission("pggb.admin") && plugin.isInArena(event.getBlock().getLocation()) != null) {
 			event.setCancelled(true);
 		}

@@ -10,6 +10,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -129,13 +130,19 @@ public class PGGrifblockArena {
 				queueTimer = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 				    @Override
 				    public void run() {
-				    	if(secondsToWait % 10 == 0 || secondsToWait <= 5) {
+				    	if((secondsToWait % 10 == 0 || secondsToWait <= 5)) {
 				    		messageAllPlayers("Arena " + plugin.getArenaConfigFile(arenaName).getString("name") + " starts in " + secondsToWait + " seconds!");
+				    		if(secondsToWait <= 3) {
+				    			if(secondsToWait != 0)
+				    				playSoundAllPlayers(Sound.BLOCK_NOTE_BLOCK_PLING, 1.3F);
+				    			else
+				    				playSoundAllPlayers(Sound.BLOCK_NOTE_BLOCK_PLING, 2.0F);
+				    		}
 				    	}
-				       secondsToWait -= 1;
-				       if(secondsToWait <= 0) {
-				    	   startArena();
-				       }
+				    	if(secondsToWait <= 0) {
+				    		startArena();
+				    	}
+				    	secondsToWait -= 1;
 				    }
 				}, 20, 20);
 				return true;
@@ -149,18 +156,30 @@ public class PGGrifblockArena {
 		return false;
 	}
 	
-	public void checkToEnd() {
+	public boolean checkToEnd() {
 		updateSigns();
 		updateScoreboards();
 		if(this.inProgress && (blueTeam.size() < 1 || redTeam.size() < 1)) {
 			endArena();
+			return true;
 		}
-		if(round > plugin.getArenaConfigInt(arenaName, "roundsToPlay")) {
+		/*if(round > plugin.getArenaConfigInt(arenaName, "roundsToPlay")) {
 			if(teamScores.get("RED") > teamScores.get("BLUE"))
 				winArena("RED");
 			else
 				winArena("BLUE");
+		}*/
+		if(teamScores.get("RED") >= plugin.getArenaConfigInt(arenaName, "roundsToWin")) {
+			plugin.printToConsole("red win");
+			winArena("RED");
+			return true;
 		}
+		else if(teamScores.get("BLUE") >= plugin.getArenaConfigInt(arenaName, "roundsToWin")) {
+			plugin.printToConsole("blue win");
+			winArena("BLUE");
+			return true;
+		}
+		return false;
 	}
 	
 	public void startArena() {
@@ -203,7 +222,6 @@ public class PGGrifblockArena {
         	ply.teleport(plugin.getArenaBlockLocation(arenaName, this.getPlayerObj(ply).getTeam()+"Spawn").add(0,1.5,0));
         	equipStarterKit(ply);
         	ply.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, (6000*20), 0));
-        	//ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, (6000*20), 0));
         }
         this.updateScoreboards();
         startRound();
@@ -224,9 +242,9 @@ public class PGGrifblockArena {
 	}
 	
 	public void nextRound() {
-		nextRoundPhase = true;
-		round += 1;
-		if(round <= plugin.getArenaConfigInt(arenaName, "roundsToPlay")) {
+		if(!checkToEnd()) {
+			nextRoundPhase = true;
+			round += 1;
 			messageAllPlayers("You have " + plugin.getArenaConfigInt(arenaName, "roundGraceTime") + " seconds before the next round starts...");
 			roundGraceTimer = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 				@Override
@@ -235,18 +253,22 @@ public class PGGrifblockArena {
 				}
 			}, plugin.getArenaConfigInt(arenaName, "roundGraceTime")*20);
 		}
-		checkToEnd();
 	}
 	
 	public void winArena(String winTeam) {
-		Map<Player, PGGrifblockPlayer> winTeamMap = new HashMap<Player, PGGrifblockPlayer>();
+		/*Map<Player, PGGrifblockPlayer> winTeamMap = new HashMap<Player, PGGrifblockPlayer>();
 		if(winTeam.equals("RED"))
 			winTeamMap = redTeam;
 		else
 			winTeamMap = blueTeam;
 		for(Player ply : winTeamMap.keySet())
-			this.bootPlayer(ply, "won");
-		endArena();
+			this.bootPlayer(ply, "won");*/
+		List<Player> plys = new ArrayList<Player>(players.keySet());
+		for(int i = plys.size()-1; i >= 0; i--) {
+			Player ply = plys.get(i);
+			bootPlayer(ply, winTeam);
+		}
+		//endArena();
 	}
 	
 	public void endArena() {
@@ -316,12 +338,19 @@ public class PGGrifblockArena {
 		}
 	}
 	
-	public void bootPlayer(Player ply) {
-		bootPlayer(ply, "left");
+	public void playSoundAllPlayers(Sound sound, float pitch) {
+		for(Player ply : players.keySet()) {
+			ply.playSound(ply.getLocation(), sound, 2.0F, pitch);
+		}
 	}
-	public void bootPlayer(Player ply, String reason) {
+	
+	public void bootPlayer(Player ply) {
+		bootPlayer(ply, null);
+	}
+	public void bootPlayer(Player ply, String teamWon) {
 		//addTopScore(ply, wave);
 		//getPlayer(ply).clearPerks();
+		String playerTeam = getPlayerObj(ply).getTeam();
 		if(getPlayerObj(ply).hasGrifblock()) {
 			getPlayerObj(ply).toggleGrifblock();
 			this.spawnGrifblock();
@@ -335,6 +364,7 @@ public class PGGrifblockArena {
 		plugin.removeUnclaimedData(ply);
 		ply.removePotionEffect(PotionEffectType.JUMP);
 		ply.removePotionEffect(PotionEffectType.SLOW_FALLING);
+		ply.setAbsorptionAmount(0.0);
 		
 		ply.teleport(oldLocs.get(ply));
 		oldLocs.remove(ply);
@@ -357,23 +387,33 @@ public class PGGrifblockArena {
 		ply.setHealth(20.0);
 		ply.setFireTicks(0);
 		
-		messageAllPlayers(ply.getName() + " has left!");
+		//messageAllPlayers(ply.getName() + " has left!");
 		
-		plugin.writeMessage(ply, "You left!");
+		//plugin.writeMessage(ply, "You left!");
 		ply.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
 		
-		if(reason.equals("won")) {
-			if(plugin.getConfig().getList("arenaRewardCommands").size() > 0) {
-				for(Object obj : plugin.getConfig().getList("arenaRewardCommands")) {
-					if(obj instanceof String) {
-						String str = (String) obj;
-						PGGrifblockRewardCommand rewardCommand = new PGGrifblockRewardCommand(plugin, str, ply, round);
-						if(rewardCommand.notZero())
-							Bukkit.dispatchCommand(Bukkit.getConsoleSender(), rewardCommand.getNewCommandString());
+		plugin.printToConsole(ply.getName() + " - " + teamWon);
+		if(teamWon != null) {
+			if(playerTeam.equals(teamWon)) {
+				if(plugin.getConfig().getList("arenaRewardCommands").size() > 0) {
+					for(Object obj : plugin.getConfig().getList("arenaRewardCommands")) {
+						if(obj instanceof String) {
+							String str = (String) obj;
+							PGGrifblockRewardCommand rewardCommand = new PGGrifblockRewardCommand(plugin, str, ply, round);
+							if(rewardCommand.notZero())
+								Bukkit.dispatchCommand(Bukkit.getConsoleSender(), rewardCommand.getNewCommandString());
+						}
 					}
 				}
+				plugin.writeMessage(ply, "You won!");
 			}
-			plugin.writeMessage(ply, "You won!");
+			else {
+				plugin.writeMessage(ply, "You lost!");
+			}
+		}
+		else {
+			messageAllPlayers(ply.getName() + " has left!");
+			plugin.writeMessage(ply, "You left!");
 		}
 		checkToEnd();
 	}

@@ -10,8 +10,8 @@ waitTime: 15
 maxPlayers: 8
 # The minimum amount of players to start an arena.
 minPlayers: 2
-# The amount of rounds to play. Recommended to set to an odd amount.
-roundsToPlay: 5
+# The amount of rounds to win to win the game.
+roundsToWin: 3
 # The amount of seconds to wait before starting the next round.
 roundGraceTime: 5
 

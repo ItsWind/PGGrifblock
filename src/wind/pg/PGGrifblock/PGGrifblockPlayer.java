@@ -35,25 +35,40 @@ public class PGGrifblockPlayer {
 		this.ply = ply;
 	}
 	
-	boolean isDead = false;
 	int plyDeathTimer = -1;
+	int deadSecondsLeft = 4;
 	
 	boolean hasGrifblock = false;
 	int grifblockShieldDamageTimer = -1;
 	int grifblockShieldRegenTimer = -1;
 	
 	public void die() {
-		isDead = true;
+		this.dropGrifblock();
 		ply.setGameMode(GameMode.SPECTATOR);
-		plyDeathTimer = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+		ply.getInventory().clear();
+		plyDeathTimer = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			@Override
 			public void run() {
 				if(!arena.nextRoundPhase && plugin.playerIsPlaying(ply) != null) {
-					isDead = false;
-					resetInArena();
+					deadSecondsLeft -= 1;
+					if(deadSecondsLeft <= 0) {
+						ply.playSound(ply.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 2.0F, 2.0F);
+						resetInArena();
+						Bukkit.getScheduler().cancelTask(plyDeathTimer);
+						plyDeathTimer = -1;
+						deadSecondsLeft = 4;
+					}
+					else {
+						ply.playSound(ply.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 2.0F, 1.3F);
+					}
+				}
+				else {
+					Bukkit.getScheduler().cancelTask(plyDeathTimer);
+					plyDeathTimer = -1;
+					deadSecondsLeft = 4;
 				}
 			}
-		}, 4*20);
+		}, 1*20, 1*20);
 	}
 	
 	public void setShieldTimer() {
@@ -181,7 +196,6 @@ public class PGGrifblockPlayer {
 			ply.getInventory().clear();
 			arena.equipStarterKit(ply);
 			ply.setFireTicks(0);
-			dropGrifblock();
 			ply.teleport(spawnLoc);
 			ply.setGameMode(GameMode.SURVIVAL);
 			ply.setVelocity(new Vector(0,0,0));
