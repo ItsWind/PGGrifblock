@@ -52,6 +52,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 					Player ply = (Player) sender;
 					if(plugin.playerIsPlaying(ply) != null) {
 						plugin.removePlayerFromArenaQueue(plugin.playerIsPlaying(ply).arenaName, ply, false);
+						plugin.writeMessage(ply, "You left!");
 					}
 					else if(plugin.playerIsQueued(ply) != null) {
 						plugin.removePlayerFromArenaQueue(plugin.playerIsQueued(ply).arenaName, ply, false);

@@ -170,12 +170,10 @@ public class PGGrifblockArena {
 				winArena("BLUE");
 		}*/
 		if(teamScores.get("RED") >= plugin.getArenaConfigInt(arenaName, "roundsToWin")) {
-			plugin.printToConsole("red win");
 			winArena("RED");
 			return true;
 		}
 		else if(teamScores.get("BLUE") >= plugin.getArenaConfigInt(arenaName, "roundsToWin")) {
-			plugin.printToConsole("blue win");
 			winArena("BLUE");
 			return true;
 		}
@@ -256,19 +254,14 @@ public class PGGrifblockArena {
 	}
 	
 	public void winArena(String winTeam) {
-		/*Map<Player, PGGrifblockPlayer> winTeamMap = new HashMap<Player, PGGrifblockPlayer>();
+		Map<Player, PGGrifblockPlayer> winTeamMap = new HashMap<Player, PGGrifblockPlayer>();
 		if(winTeam.equals("RED"))
 			winTeamMap = redTeam;
 		else
 			winTeamMap = blueTeam;
 		for(Player ply : winTeamMap.keySet())
-			this.bootPlayer(ply, "won");*/
-		List<Player> plys = new ArrayList<Player>(players.keySet());
-		for(int i = plys.size()-1; i >= 0; i--) {
-			Player ply = plys.get(i);
-			bootPlayer(ply, winTeam);
-		}
-		//endArena();
+			this.bootPlayer(ply, "won");
+		endArena();
 	}
 	
 	public void endArena() {
@@ -345,12 +338,11 @@ public class PGGrifblockArena {
 	}
 	
 	public void bootPlayer(Player ply) {
-		bootPlayer(ply, null);
+		bootPlayer(ply, "left");
 	}
-	public void bootPlayer(Player ply, String teamWon) {
+	public void bootPlayer(Player ply, String reason) {
 		//addTopScore(ply, wave);
 		//getPlayer(ply).clearPerks();
-		String playerTeam = getPlayerObj(ply).getTeam();
 		if(getPlayerObj(ply).hasGrifblock()) {
 			getPlayerObj(ply).toggleGrifblock();
 			this.spawnGrifblock();
@@ -387,33 +379,26 @@ public class PGGrifblockArena {
 		ply.setHealth(20.0);
 		ply.setFireTicks(0);
 		
-		//messageAllPlayers(ply.getName() + " has left!");
+		messageAllPlayers(ply.getName() + " has left!");
 		
 		//plugin.writeMessage(ply, "You left!");
 		ply.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
 		
-		plugin.printToConsole(ply.getName() + " - " + teamWon);
-		if(teamWon != null) {
-			if(playerTeam.equals(teamWon)) {
-				if(plugin.getConfig().getList("arenaRewardCommands").size() > 0) {
-					for(Object obj : plugin.getConfig().getList("arenaRewardCommands")) {
-						if(obj instanceof String) {
-							String str = (String) obj;
-							PGGrifblockRewardCommand rewardCommand = new PGGrifblockRewardCommand(plugin, str, ply, round);
-							if(rewardCommand.notZero())
-								Bukkit.dispatchCommand(Bukkit.getConsoleSender(), rewardCommand.getNewCommandString());
-						}
+		if(reason.equals("won")) {
+			if(plugin.getConfig().getList("arenaRewardCommands").size() > 0) {
+				for(Object obj : plugin.getConfig().getList("arenaRewardCommands")) {
+					if(obj instanceof String) {
+						String str = (String) obj;
+						PGGrifblockRewardCommand rewardCommand = new PGGrifblockRewardCommand(plugin, str, ply, round);
+						if(rewardCommand.notZero())
+							Bukkit.dispatchCommand(Bukkit.getConsoleSender(), rewardCommand.getNewCommandString());
 					}
 				}
-				plugin.writeMessage(ply, "You won!");
 			}
-			else {
-				plugin.writeMessage(ply, "You lost!");
-			}
+			plugin.writeMessage(ply, "You won!");
 		}
 		else {
-			messageAllPlayers(ply.getName() + " has left!");
-			plugin.writeMessage(ply, "You left!");
+			plugin.writeMessage(ply, "You lost!");
 		}
 		checkToEnd();
 	}
