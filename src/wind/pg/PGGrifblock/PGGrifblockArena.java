@@ -352,11 +352,6 @@ public class PGGrifblockArena {
 		blueTeam.remove(ply);
 			
 		updateScoreboards();
-		ply.setGlowing(false);
-		plugin.removeUnclaimedData(ply);
-		ply.removePotionEffect(PotionEffectType.JUMP);
-		ply.removePotionEffect(PotionEffectType.SLOW_FALLING);
-		ply.setAbsorptionAmount(0.0);
 		
 		ply.teleport(oldLocs.get(ply));
 		oldLocs.remove(ply);
@@ -375,9 +370,8 @@ public class PGGrifblockArena {
 		
 		ply.setGameMode(oldGm.get(ply));
 		oldGm.remove(ply);
-		
-		ply.setHealth(20.0);
-		ply.setFireTicks(0);
+
+		plugin.removeUnclaimedData(ply);
 		
 		messageAllPlayers(ply.getName() + " has left!");
 		
@@ -400,6 +394,12 @@ public class PGGrifblockArena {
 		else {
 			plugin.writeMessage(ply, "You lost!");
 		}
+		ply.setHealth(20.0);
+		ply.setFireTicks(0);
+		ply.setAbsorptionAmount(0.0);
+		ply.setGlowing(false);
+		ply.removePotionEffect(PotionEffectType.JUMP);
+		ply.removePotionEffect(PotionEffectType.SLOW_FALLING);
 		checkToEnd();
 	}
 	

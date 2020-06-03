@@ -287,7 +287,7 @@ public class PGGrifblock extends JavaPlugin {
 			arena.checkToEnd();
 		}
 		else {
-			getArenaObj(arenaName).bootPlayer(ply);
+			getArenaObj(arenaName).bootPlayer(ply, "left");
 		}
 		return true;
 	}

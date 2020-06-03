@@ -195,12 +195,12 @@ public class PGGrifblockPlayer {
 			Location spawnLoc = plugin.getArenaBlockLocation(arena.arenaName, this.team+"Spawn").add(0,1.5,0);
 			ply.getInventory().clear();
 			arena.equipStarterKit(ply);
-			ply.setFireTicks(0);
 			ply.teleport(spawnLoc);
 			ply.setGameMode(GameMode.SURVIVAL);
 			ply.setVelocity(new Vector(0,0,0));
         	ply.setHealth(20);
     		ply.setAbsorptionAmount(0.0);
+			ply.setFireTicks(0);
 		}
 	}
 }
