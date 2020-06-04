@@ -625,8 +625,7 @@ public class PGGrifblock extends JavaPlugin {
 	}
 	
 	public double getRandDouble() {
-		Random r = new Random();
-		r.setSeed(r.nextInt((int) System.currentTimeMillis()));
+		Random r = new Random(System.currentTimeMillis());
 		int negativeOrPositive = r.nextInt(2);
 		if(negativeOrPositive == 1)
 			return r.nextDouble();
@@ -640,8 +639,7 @@ public class PGGrifblock extends JavaPlugin {
 			throw new IllegalArgumentException("max must be greater than min");
 		}
 
-		Random r = new Random();
-		r.setSeed(r.nextInt((int) System.currentTimeMillis()));
+		Random r = new Random(System.currentTimeMillis());
 		return r.nextInt((max - min) + 1) + min;
 	}
 	
