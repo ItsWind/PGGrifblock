@@ -14,6 +14,9 @@ public class PGGrifblockBlockBreakEvent implements Listener {
 	
 	@EventHandler
 	public void onBlockBreakInArena(BlockBreakEvent event) {
+		if(plugin.playerIsPlaying(event.getPlayer()) != null) {
+			event.setCancelled(true);
+		}
 		if(plugin.isInArena(event.getBlock().getLocation()) != null) {
 			if(!event.getPlayer().hasPermission("pggb.admin"))
 			{
