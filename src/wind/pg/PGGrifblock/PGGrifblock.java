@@ -107,7 +107,8 @@ public class PGGrifblock extends JavaPlugin {
 	}
 	
 	public void doHammerSmash(Player ply) {
-		if(ply.getAttackCooldown() == 1.0) {
+		PGGrifblockPlayer plyObj = this.playerIsPlaying(ply).getPlayerObj(ply);
+		if(plyObj.getAttackCooldown() == 1.0) {
 			PGGrifblockArena arena = this.playerIsPlaying(ply);
 			Location hammerLocation = ply.getLocation().clone().add(ply.getLocation().getDirection().multiply(2));
 			hammerLocation.add(0, 1.5, 0);
@@ -129,11 +130,13 @@ public class PGGrifblock extends JavaPlugin {
 					}
 				}
 			}
+			plyObj.attack();
 		}
 	}
 	
 	public void doMeleeSlide(Player ply, Player hit, String type) {
-		if(ply.getAttackCooldown() == 1.0) {
+		PGGrifblockPlayer plyObj = this.playerIsPlaying(ply).getPlayerObj(ply);
+		if(plyObj.getAttackCooldown() == 1.0) {
 			//PGGrifblockArena arena = this.playerIsPlaying(ply);
 			Location hammerLocation = ply.getLocation().clone().add(ply.getLocation().getDirection().multiply(2));
 			hammerLocation.add(0, 1.5, 0);
@@ -152,6 +155,7 @@ public class PGGrifblock extends JavaPlugin {
 			Vector dirVec = hammerLocation.subtract(ply.getLocation()).toVector().multiply(0.25);
 			ply.setVelocity(dirVec);
 			hit.damage(20.0);
+			plyObj.attack();
 		}
 	}
 	

@@ -82,6 +82,7 @@ public class PGGrifblockArena {
 	Map<Player, Location> oldLocs = new HashMap<Player, Location>();
 	Map<Player, ItemStack[]> oldInvs = new HashMap<Player, ItemStack[]>();
 	Map<Player, Integer> oldXp = new HashMap<Player, Integer>();
+	Map<Player, Float> oldXpPer = new HashMap<Player, Float>();
 	Map<Player, Double> oldHp = new HashMap<Player, Double>();
 	Map<Player, Integer> oldFood = new HashMap<Player, Integer>();
 	Map<Player, GameMode> oldGm = new HashMap<Player, GameMode>();
@@ -196,6 +197,8 @@ public class PGGrifblockArena {
         	plugin.setUnclaimedData(ply, "oldInv", ply.getInventory().getContents());
         	oldXp.put(ply, ply.getLevel());
         	plugin.setUnclaimedData(ply, "oldXp", ply.getLevel());
+        	oldXpPer.put(ply, ply.getExp());
+        	plugin.setUnclaimedData(ply, "oldXpPer", (double) ply.getExp());
         	oldHp.put(ply, ply.getHealth());
         	plugin.setUnclaimedData(ply, "oldHp", ply.getHealth());
         	oldFood.put(ply, ply.getFoodLevel());
@@ -208,6 +211,7 @@ public class PGGrifblockArena {
         	ply.setHealth(20);
         	ply.setFoodLevel(20);
         	ply.setGameMode(GameMode.SURVIVAL);
+        	ply.setExp(1.0F);
         	
         	if(redTeam.size() > blueTeam.size()) {
         		blueTeam.put(ply, players.get(ply));
@@ -278,6 +282,7 @@ public class PGGrifblockArena {
 		oldLocs.clear();
 		oldInvs.clear();
 		oldXp.clear();
+		oldXpPer.clear();
 		oldHp.clear();
 		oldFood.clear();
 		oldGm.clear();
@@ -365,6 +370,9 @@ public class PGGrifblockArena {
 		
 		ply.setLevel(oldXp.get(ply));
 		oldXp.remove(ply);
+		
+		ply.setExp(oldXpPer.get(ply));
+		oldXpPer.remove(ply);
 
 		ply.setHealth(oldHp.get(ply));
 		oldHp.remove(ply);

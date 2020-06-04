@@ -138,7 +138,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 				if(sender instanceof Player) {
 					Player ply = (Player) sender;
 					if(args.length > 1 && plugin.arenaExists(args[1])) {
-						ply.teleport(plugin.getArenaBlockLocation(args[1], "playerSpawn"));
+						ply.teleport(plugin.getArenaBlockLocation(args[1], "grifblockSpawn"));
 						//Location spawnLoc = new Location(plugin.getArenaObj(args[1]).arenaWorld, plugin.getArenaCordData(args[1], "playerSpawn").get(0), plugin.getArenaCordData(args[1], "playerSpawn").get(1)+1, plugin.getArenaCordData(args[1], "playerSpawn").get(2));
 						//ply.teleport(spawnLoc);
 					}

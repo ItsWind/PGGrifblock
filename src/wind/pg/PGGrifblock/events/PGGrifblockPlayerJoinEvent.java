@@ -38,6 +38,9 @@ public class PGGrifblockPlayerJoinEvent implements Listener {
 				else if(dataName.equalsIgnoreCase("oldXp")) {
 					ply.setLevel(unclaimedData.getInt("oldXp"));
 				}
+				else if(dataName.equalsIgnoreCase("oldXpPer")) {
+					ply.setExp((float) unclaimedData.getDouble("oldXpPer"));
+				}
 				else if(dataName.equalsIgnoreCase("oldHp")) {
 					ply.setHealth(unclaimedData.getDouble("oldHp"));
 				}

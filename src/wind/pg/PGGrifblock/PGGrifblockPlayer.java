@@ -42,6 +42,38 @@ public class PGGrifblockPlayer {
 	int grifblockShieldDamageTimer = -1;
 	int grifblockShieldRegenTimer = -1;
 	
+	int attackCooldownTimer = -1;
+	double attackCooldown = 1.0;
+	
+	public double getAttackCooldown() {
+		return attackCooldown;
+	}
+	
+	public void attack() {
+		if(plugin.getArenaConfigInt(arena.arenaName, "playerAttackCooldown") > 0) {
+			attackCooldown = 0.0;
+			ply.setExp((float) attackCooldown);
+			if(attackCooldownTimer != -1)
+				Bukkit.getScheduler().cancelTask(attackCooldownTimer);
+			attackCooldownTimer = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+				@Override
+				public void run() {
+					if(plugin.playerIsPlaying(ply) != null && attackCooldown < 1.0) {
+						attackCooldown += 0.1;
+						if(attackCooldown > 1.0)
+							attackCooldown = 1.0;
+						ply.setExp((float) attackCooldown);
+					}
+					else {
+						attackCooldown = 1.0;
+						Bukkit.getScheduler().cancelTask(attackCooldownTimer);
+						attackCooldownTimer = -1;
+					}
+				}
+			}, 2*(plugin.getArenaConfigInt(arena.arenaName, "playerAttackCooldown")), 2*(plugin.getArenaConfigInt(arena.arenaName, "playerAttackCooldown")));
+		}
+	}
+	
 	public void die() {
 		this.dropGrifblock();
 		ply.setGameMode(GameMode.SPECTATOR);

@@ -14,6 +14,8 @@ minPlayers: 2
 roundsToWin: 3
 # The amount of seconds to wait before starting the next round.
 roundGraceTime: 5
+# The amount of seconds a player waits until they can attack.
+playerAttackCooldown: 1
 
 # A list of arena award commands to execute.
 # #wave - get the number of the wave.
