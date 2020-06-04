@@ -29,7 +29,7 @@ public class PGGrifblockArena {
 	public String arenaName;
 	int secondsToWait;
 	
-	public Entity grifblock;
+	public Entity grifblock = null;
 	
 	Map<Player, PGGrifblockPlayer> players = new HashMap<Player, PGGrifblockPlayer>();
 	Map<Player, PGGrifblockPlayer> redTeam = new HashMap<Player, PGGrifblockPlayer>();
@@ -160,10 +160,6 @@ public class PGGrifblockArena {
 	public boolean checkToEnd() {
 		updateSigns();
 		updateScoreboards();
-		if(this.inProgress && (blueTeam.size() < 1 || redTeam.size() < 1)) {
-			endArena();
-			return true;
-		}
 		/*if(round > plugin.getArenaConfigInt(arenaName, "roundsToPlay")) {
 			if(teamScores.get("RED") > teamScores.get("BLUE"))
 				winArena("RED");
@@ -176,6 +172,10 @@ public class PGGrifblockArena {
 		}
 		else if(teamScores.get("BLUE") >= plugin.getArenaConfigInt(arenaName, "roundsToWin")) {
 			winArena("BLUE");
+			return true;
+		}
+		else if(this.inProgress && (blueTeam.size() < 1 || redTeam.size() < 1)) {
+			endArena("left");
 			return true;
 		}
 		return false;
@@ -265,15 +265,15 @@ public class PGGrifblockArena {
 			winTeamMap = blueTeam;
 		for(Player ply : winTeamMap.keySet())
 			this.bootPlayer(ply, "won");
-		endArena();
+		endArena("lost");
 	}
 	
-	public void endArena() {
+	public void endArena(String reason) {
 		inProgress = false;
 		round = 1;
 		nextRoundPhase = false;
 		updateSigns();
-		this.bootAllPlayers();
+		this.bootAllPlayers(reason);
 		teamScores.put("RED", 0);
 		teamScores.put("BLUE", 0);
 		players.clear();
@@ -287,7 +287,7 @@ public class PGGrifblockArena {
 		oldFood.clear();
 		oldGm.clear();
 		
-		if(!grifblock.equals(null) && grifblock.isValid() && grifblock instanceof Item)
+		if(grifblock != null && grifblock.isValid() && grifblock instanceof Item)
 			grifblock.remove();
 		
 		Bukkit.getScheduler().cancelTask(roundGraceTimer);
@@ -348,10 +348,6 @@ public class PGGrifblockArena {
 	public void bootPlayer(Player ply, String reason) {
 		//addTopScore(ply, wave);
 		//getPlayer(ply).clearPerks();
-		ply.setFireTicks(0);
-		ply.setAbsorptionAmount(0.0);
-		ply.setGlowing(false);
-		ply.removePotionEffect(PotionEffectType.JUMP);
 		if(getPlayerObj(ply).hasGrifblock()) {
 			getPlayerObj(ply).toggleGrifblock();
 			this.spawnGrifblock();
@@ -385,9 +381,6 @@ public class PGGrifblockArena {
 
 		plugin.removeUnclaimedData(ply);
 		
-		messageAllPlayers(ply.getName() + " has left!");
-		
-		//plugin.writeMessage(ply, "You left!");
 		ply.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
 		
 		if(reason.equals("won")) {
@@ -403,17 +396,26 @@ public class PGGrifblockArena {
 			}
 			plugin.writeMessage(ply, "You won!");
 		}
-		else {
+		else if(reason.equals("lost")){
 			plugin.writeMessage(ply, "You lost!");
 		}
+		else {
+			messageAllPlayers(ply.getName() + " has left!");
+			plugin.writeMessage(ply, "You left!");
+		}
+		plugin.extinguishPly(ply);
+		ply.setAbsorptionAmount(0.0);
+		ply.setGlowing(false);
+		ply.removePotionEffect(PotionEffectType.JUMP);
+		ply.removePotionEffect(PotionEffectType.SPEED);
 		checkToEnd();
 	}
 	
-	public void bootAllPlayers() {
+	public void bootAllPlayers(String reason) {
 		List<Player> plys = new ArrayList<Player>(players.keySet());
 		for(int i = plys.size()-1; i >= 0; i--) {
 			Player ply = plys.get(i);
-			bootPlayer(ply);
+			bootPlayer(ply, reason);
 		}
 		/*for(Player ply : players.keySet()) {
 			plugin.printToConsole("booting " + ply.getName());

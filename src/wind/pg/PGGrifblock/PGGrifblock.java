@@ -99,7 +99,7 @@ public class PGGrifblock extends JavaPlugin {
 		getServer().getConsoleSender().sendMessage("PGGrifblock unloaded!");
 		
 		for(String arenaName : arenas.keySet()) {
-			getArenaObj(arenaName).endArena();
+			getArenaObj(arenaName).endArena("left");
 		}
 		this.clearArenas();
 		this.bootAllEditMode();
@@ -606,6 +606,15 @@ public class PGGrifblock extends JavaPlugin {
 			}
 		}
 		return false;
+	}
+	
+	public void extinguishPly(Player ply) {
+		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+			@Override
+			public void run() {
+				ply.setFireTicks(0);
+			}
+		}, 1);
 	}
 	
 	public void writeMessage(CommandSender ply, String message) {

@@ -232,7 +232,7 @@ public class PGGrifblockPlayer {
 			ply.setVelocity(new Vector(0,0,0));
         	ply.setHealth(20);
     		ply.setAbsorptionAmount(0.0);
-			ply.setFireTicks(0);
+			plugin.extinguishPly(ply);
 		}
 	}
 }

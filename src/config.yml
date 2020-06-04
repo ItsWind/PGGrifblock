@@ -18,9 +18,8 @@ roundGraceTime: 5
 playerAttackCooldown: 1
 
 # A list of arena award commands to execute.
-# #wave - get the number of the wave.
+# #round - get the number of the wave.
 # #player - get the name of the player.
-# #survived - get the number of survived waves.
-# #survivedMultx - place a number where x is and get that number multiplied by survived waves.
+# #roundMultx - place a number where x is and get that number multiplied by survived waves.
 arenaRewardCommands:
-- 'cupoints add #player #survivedMult1'
+- 'cupoints add #player #roundMult1'
