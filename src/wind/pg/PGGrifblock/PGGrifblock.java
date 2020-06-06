@@ -122,7 +122,7 @@ public class PGGrifblock extends JavaPlugin {
 				if(!other.equals(ply)) {
 					//this.printToConsole("dist " + other.getLocation().distance(hammerLocation));
 					double distFromHammer = other.getLocation().add(0, 1.5, 0).distance(hammerLocation);
-					if(distFromHammer <= 2.5) {
+					if(distFromHammer <= 2.85) {
 						Vector dirVec = other.getLocation().subtract(hammerLocation).toVector();
 						other.setVelocity(dirVec.add(new Vector(0,0.25,0)));
 						other.damage(20/(distFromHammer));

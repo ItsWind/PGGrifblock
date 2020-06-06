@@ -27,6 +27,7 @@ public class PGGrifblockTabCompletion implements TabCompleter {
 		                list.add("join");
 		                list.add("leave");
 		                list.add("spectate");
+		                list.add("top");
 		                if(ply.hasPermission("pggb.admin")) {
 		                    list.add("reload");
 			                list.add("create");
@@ -36,7 +37,7 @@ public class PGGrifblockTabCompletion implements TabCompleter {
 		                }
 	        		}
 		        	else if(args.length == 2) {
-		        		String[] needsArenaName = {"join", "edit", "delete", "spectate", "tp"};
+		        		String[] needsArenaName = {"join", "edit", "delete", "spectate", "tp", "top"};
 		        		if(plugin.arrayHas(needsArenaName, args[0]))
 		        			if(plugin.allArenaNames() != null)
 		        				for(String arenaName : plugin.allArenaNames())

@@ -32,7 +32,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 				commandStrings.put("join", "Queues you for an arena.");
 				commandStrings.put("leave", "Disconnects you from any current arena.");
 				commandStrings.put("spectate", "Toggles spectating of an arena.");
-				//commandStrings.put("top", "Shows top five scores for the given arena.");
+				commandStrings.put("top", "Shows top five scores for the given arena.");
 				commandStrings.put("admin|tp", "Teleport to the given arena.");
 				commandStrings.put("admin|create", "Creates an arena with the given name.");
 				commandStrings.put("admin|edit", "Toggles edit mode for the arena you're currently standing in or with the given name.");
@@ -91,6 +91,20 @@ public class PGGrifblockCommands implements CommandExecutor {
 							plugin.writeMessage(ply, "No arena found.");
 						}
 					}
+				}
+			}
+			else if(args[0].equalsIgnoreCase("top")) {
+				if(args.length > 1 && plugin.arenaExists(args[1])) {
+					String arenaName = args[1];
+					String topString = ChatColor.YELLOW + "---------- " + ChatColor.WHITE + "Top Scores for " + plugin.getArenaConfigFile(arenaName).getString("name") + ChatColor.YELLOW + " ----------\n";
+					if(plugin.getArenaObj(arenaName).getTopScores(5) == null)
+						topString += ChatColor.GOLD + "No one has played this arena yet! You can be the first!";
+					else
+						topString += ChatColor.GOLD + plugin.getArenaObj(arenaName).getTopScores(5);
+					sender.sendMessage(topString);
+				}
+				else {
+					plugin.writeMessage(sender, "No arena found.");
 				}
 			}
 			else if(args[0].equalsIgnoreCase("reload")) {

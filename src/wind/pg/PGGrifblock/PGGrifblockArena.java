@@ -1,9 +1,14 @@
 package wind.pg.PGGrifblock;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -12,6 +17,8 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -86,6 +93,47 @@ public class PGGrifblockArena {
 	Map<Player, Double> oldHp = new HashMap<Player, Double>();
 	Map<Player, Integer> oldFood = new HashMap<Player, Integer>();
 	Map<Player, GameMode> oldGm = new HashMap<Player, GameMode>();
+	
+	public String getTopScores(int upTo) {
+		Map<UUID, Integer> topScores = new HashMap<UUID, Integer>();
+		FileConfiguration arenaConfig = plugin.getArenaConfigFile(arenaName);
+		if(arenaConfig.isConfigurationSection("topScores")) {
+			ConfigurationSection topScoreSection = arenaConfig.getConfigurationSection("topScores");
+			for(String uuidStr : arenaConfig.getConfigurationSection("topScores").getKeys(false)) {
+				topScores.put(UUID.fromString(uuidStr), topScoreSection.getInt(uuidStr));
+			}
+			Map<UUID, Integer> sortedScores =
+					topScores.entrySet().stream()
+	                        .sorted(Map.Entry.comparingByValue())
+	                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+	                                (e1, e2) -> e1, LinkedHashMap::new));
+			String stringToReturn = "";
+			ArrayList<UUID> sortedKeys = new ArrayList<UUID>(sortedScores.keySet());
+			if(upTo > sortedKeys.size())
+				upTo = sortedKeys.size();
+			for(int i = sortedKeys.size()-1; i >= 0+(sortedKeys.size()-upTo); i--)
+				stringToReturn += Bukkit.getOfflinePlayer(sortedKeys.get(i)).getName() + " - Wins: " + sortedScores.get(sortedKeys.get(i)) + "\n";
+			return stringToReturn;
+		}
+		return null;
+	}
+	
+	public void addTopScore(Player ply) {
+		arenaName = arenaName.toLowerCase();
+		File arenaFile = new File(plugin.getDataFolder() + File.separator + "arenas" + File.separator, arenaName + ".yml");
+		FileConfiguration arenaConfig = plugin.getArenaConfigFile(arenaName);
+		/*if(wave > arenaConfig.getInt("topScores." + ply.getUniqueId().toString()))
+			arenaConfig.set("topScores." + ply.getUniqueId().toString(), wave);*/
+		int plyCurrentWins = 0;
+		if(arenaConfig.contains("topScores." + ply.getUniqueId().toString()))
+			plyCurrentWins = arenaConfig.getInt("topScores." + ply.getUniqueId().toString());
+		arenaConfig.set("topScores." + ply.getUniqueId().toString(), plyCurrentWins+1);
+		try {
+			arenaConfig.save(arenaFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public ItemStack getGrifblockItem() {
 		ItemStack grifblockItem = new ItemStack(Material.GLOWSTONE, 1);
@@ -263,8 +311,10 @@ public class PGGrifblockArena {
 			winTeamMap = redTeam;
 		else
 			winTeamMap = blueTeam;
-		for(Player ply : winTeamMap.keySet())
+		for(Player ply : winTeamMap.keySet()) {
+			this.addTopScore(ply);
 			this.bootPlayer(ply, "won");
+		}
 		endArena("lost");
 	}
 	

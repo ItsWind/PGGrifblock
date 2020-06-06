@@ -6,6 +6,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 
 import wind.pg.PGGrifblock.PGGrifblock;
+import wind.pg.PGGrifblock.PGGrifblockArena;
 
 public class PGGrifblockPickupItemEvent implements Listener {
 	PGGrifblock plugin;
@@ -18,8 +19,11 @@ public class PGGrifblockPickupItemEvent implements Listener {
 		if(event.getEntity() instanceof Player) {
 			Player ply = (Player) event.getEntity();
 			if(plugin.playerIsPlaying(ply) != null) {
+				PGGrifblockArena arena = plugin.playerIsPlaying(ply);
 				if(event.getItem().getItemStack().getItemMeta().getDisplayName().equals("Grifblock")) {
-					plugin.playerIsPlaying(ply).getPlayerObj(ply).toggleGrifblock();
+					if(!arena.getPlayerObj(ply).hasGrifblock()) {
+						arena.getPlayerObj(ply).toggleGrifblock();
+					}
 				}
 			}
 		}
