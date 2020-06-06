@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 
 import net.md_5.bungee.api.ChatColor;
 import wind.pg.PGGrifblock.PGGrifblock;
+import wind.pg.PGGrifblock.PGGrifblockArena;
 
 public class PGGrifblockCommands implements CommandExecutor {
 	PGGrifblock plugin;
@@ -19,6 +20,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 		this.plugin = plugin;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(sender.hasPermission("pggb.player")) {
@@ -47,6 +49,48 @@ public class PGGrifblockCommands implements CommandExecutor {
 					}
 				}
 				sender.sendMessage(helpString);
+			}
+			else if(args[0].equalsIgnoreCase("pickteam")) {
+				if(args.length > 1 && (args[1].equalsIgnoreCase("RED") || args[1].equalsIgnoreCase("BLUE"))) {
+					if(sender instanceof Player) {
+						Player ply = (Player) sender;
+						String team = args[1].toUpperCase();
+						if(plugin.playerIsQueued(ply) != null) {
+							PGGrifblockArena arena = plugin.playerIsQueued(ply);
+							/*Map<Player, PGGrifblockPlayer> teamMap;
+							if(team.equals("RED"))
+								teamMap = arena.redTeam;
+							else
+								teamMap = arena.blueTeam;
+							if(teamMap.size() < arena.players.size()-1) {
+								if(team.equals("RED"))
+									arena.redTeam.put(ply, arena.getPlayerObj(ply));
+								else
+									arena.blueTeam.put(ply, arena.getPlayerObj(ply));
+								arena.getPlayerObj(ply).assignTeam(team);
+								arena.updateScoreboards();
+							}
+							else
+								plugin.writeMessage(ply, "There are too many players on that team!");*/
+							if(arena.teams.get(team).size() < arena.players.size()-1) {
+								if(arena.getPlayerObj(ply).getTeam() == null) {
+									arena.teams.get(team).put(ply, arena.getPlayerObj(ply));
+									arena.getPlayerObj(ply).assignTeam(team);
+									arena.updateScoreboards();
+								}
+								else
+									plugin.writeMessage(ply, "You have already assigned your team!");
+							}
+							else
+								plugin.writeMessage(ply, "There are too many players on that team!");
+						}
+						else
+							plugin.writeMessage(ply, "You can only use this while queued!");
+					}
+				}
+				else {
+					plugin.writeMessage(sender, "You must specify a valid team! (RED/BLUE)");
+				}
 			}
 			else if(args[0].equalsIgnoreCase("leave")) {
 				if(sender instanceof Player) {

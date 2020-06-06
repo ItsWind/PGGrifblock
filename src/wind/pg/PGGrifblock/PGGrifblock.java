@@ -287,6 +287,8 @@ public class PGGrifblock extends JavaPlugin {
 				return false;
 			}
 			PGGrifblockArena arena = getArenaObj(arenaName);
+			if(arena.getPlayerObj(ply).getTeam() != null)
+				arena.teams.get(arena.getPlayerObj(ply).getTeam()).remove(ply);
 			arena.players.remove(ply);
 			arena.messageAllPlayers(ply.getName() + " has left the queue for " + getArenaConfigFile(arenaName).getString("name") + "!\n(" + arena.getPlayers().size() + "/" + getArenaConfigInt(arenaName, "maxPlayers") + ")");
 			writeMessage(ply, "You have left the queue for " + getArenaConfigFile(arenaName).getString("name") + "!");
@@ -609,12 +611,14 @@ public class PGGrifblock extends JavaPlugin {
 	}
 	
 	public void extinguishPly(Player ply) {
-		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			@Override
-			public void run() {
-				ply.setFireTicks(0);
-			}
-		}, 1);
+		if(ply.getFireTicks() > -20) {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+				@Override
+				public void run() {
+					ply.setFireTicks(-20);
+				}
+			}, 1);
+		}
 	}
 	
 	public void writeMessage(CommandSender ply, String message) {

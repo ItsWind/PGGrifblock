@@ -38,10 +38,12 @@ public class PGGrifblockArena {
 	
 	public Entity grifblock = null;
 	
-	Map<Player, PGGrifblockPlayer> players = new HashMap<Player, PGGrifblockPlayer>();
+	public Map<Player, PGGrifblockPlayer> players = new HashMap<Player, PGGrifblockPlayer>();
 	Map<Player, PGGrifblockPlayer> redTeam = new HashMap<Player, PGGrifblockPlayer>();
 	Map<Player, PGGrifblockPlayer> blueTeam = new HashMap<Player, PGGrifblockPlayer>();
 	public Map<String, Integer> teamScores = new HashMap<String, Integer>();
+	@SuppressWarnings("rawtypes")
+	public Map<String, Map> teams = new HashMap<String, Map>();
 	
 	ArrayList<Block> arenaSigns = new ArrayList<Block>();
 	ArrayList<ItemStack> arenaStarterKit = new ArrayList<ItemStack>();
@@ -52,6 +54,8 @@ public class PGGrifblockArena {
 		secondsToWait = plugin.getArenaConfigInt(arenaName, "waitTime");
 		teamScores.put("RED", 0);
 		teamScores.put("BLUE", 0);
+		teams.put("RED", redTeam);
+		teams.put("BLUE", blueTeam);
 		
 		Map<Material, String> arenaTools = new HashMap<Material, String>();
 		arenaTools.put(Material.IRON_AXE, "Gravity Hammer");
@@ -261,13 +265,15 @@ public class PGGrifblockArena {
         	ply.setGameMode(GameMode.SURVIVAL);
         	ply.setExp(1.0F);
         	
-        	if(redTeam.size() > blueTeam.size()) {
-        		blueTeam.put(ply, players.get(ply));
-        		players.get(ply).assignTeam("BLUE");
-        	}
-        	else {
-        		redTeam.put(ply, players.get(ply));
-        		players.get(ply).assignTeam("RED");
+        	if(this.getPlayerObj(ply).getTeam() == null) {
+	        	if(redTeam.size() > blueTeam.size()) {
+	        		blueTeam.put(ply, players.get(ply));
+	        		players.get(ply).assignTeam("BLUE");
+	        	}
+	        	else {
+	        		redTeam.put(ply, players.get(ply));
+	        		players.get(ply).assignTeam("RED");
+	        	}
         	}
         	ply.teleport(plugin.getArenaBlockLocation(arenaName, this.getPlayerObj(ply).getTeam()+"Spawn").add(0,1.5,0));
         	equipStarterKit(ply);
@@ -312,6 +318,7 @@ public class PGGrifblockArena {
 		else
 			winTeamMap = blueTeam;
 		for(Player ply : winTeamMap.keySet()) {
+			plugin.printToConsole(ply.getName());
 			this.addTopScore(ply);
 			this.bootPlayer(ply, "won");
 		}
