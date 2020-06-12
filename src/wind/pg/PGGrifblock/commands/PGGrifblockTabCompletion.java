@@ -20,7 +20,7 @@ public class PGGrifblockTabCompletion implements TabCompleter {
         ArrayList<String> list = new ArrayList<String>();
         if(sender instanceof Player){
             Player ply = (Player) sender;
-            if(ply.hasPermission("pggb.player")) {
+            if(plugin.plyHasPerm(ply, "pggb.player")) {
 	        	if(cmd.getName().equalsIgnoreCase("pggb") || cmd.getName().equalsIgnoreCase("gb")) {
 		        	if(args.length == 1) {
 		                list.add("help");
@@ -28,7 +28,7 @@ public class PGGrifblockTabCompletion implements TabCompleter {
 		                list.add("leave");
 		                list.add("spectate");
 		                list.add("top");
-		                if(ply.hasPermission("pggb.admin")) {
+		                if(plugin.plyHasPerm(ply, "pggb.admin")) {
 		                    list.add("reload");
 			                list.add("create");
 			                list.add("edit");

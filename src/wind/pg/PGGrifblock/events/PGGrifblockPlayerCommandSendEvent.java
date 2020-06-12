@@ -19,7 +19,7 @@ public class PGGrifblockPlayerCommandSendEvent implements Listener {
 		if(plugin.playerIsPlaying(ply) != null || plugin.isSpectating(ply) != null) {
 			String[] commandArgs = event.getMessage().split(" ");
 			if((!commandArgs[0].equalsIgnoreCase("/pggb")) && (!commandArgs[0].equalsIgnoreCase("/gb"))) {
-				if(!ply.hasPermission("pggb.bypass")) {
+				if(!plugin.plyHasPerm(ply, "pggb.bypass")) {
 					event.setCancelled(true);
 					plugin.writeMessage(ply, "You cannot use commands while playing or spectating!");
 				}

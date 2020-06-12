@@ -29,14 +29,17 @@ public class PGGrifblockPlayer {
 	String team;
 	Player ply;
 	
+	int deadSecondsLeft = 4;
+	
 	public PGGrifblockPlayer(PGGrifblock plugin, PGGrifblockArena arena, Player ply) {
 		this.plugin = plugin;
 		this.arena = arena;
 		this.ply = ply;
+		
+		deadSecondsLeft = plugin.getArenaConfigInt(arena.arenaName, "playerRespawn");
 	}
 	
 	int plyDeathTimer = -1;
-	int deadSecondsLeft = 4;
 	
 	boolean hasGrifblock = false;
 	int grifblockShieldDamageTimer = -1;
@@ -88,7 +91,7 @@ public class PGGrifblockPlayer {
 						resetInArena();
 						Bukkit.getScheduler().cancelTask(plyDeathTimer);
 						plyDeathTimer = -1;
-						deadSecondsLeft = 4;
+						deadSecondsLeft = plugin.getArenaConfigInt(arena.arenaName, "playerRespawn");
 					}
 					else {
 						ply.playSound(ply.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 2.0F, 1.3F);
@@ -97,7 +100,7 @@ public class PGGrifblockPlayer {
 				else {
 					Bukkit.getScheduler().cancelTask(plyDeathTimer);
 					plyDeathTimer = -1;
-					deadSecondsLeft = 4;
+					deadSecondsLeft = plugin.getArenaConfigInt(arena.arenaName, "playerRespawn");
 				}
 			}
 		}, 1*20, 1*20);

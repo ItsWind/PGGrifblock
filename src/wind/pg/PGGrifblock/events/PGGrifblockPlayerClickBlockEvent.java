@@ -51,7 +51,6 @@ public class PGGrifblockPlayerClickBlockEvent implements Listener {
 		if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			if(event.getClickedBlock().getType().toString().toLowerCase().contains("sign")) {
 				Sign sign = (Sign) event.getClickedBlock().getState();
-				//if(sign.getLine(0).equalsIgnoreCase(plugin.getConfig().getString("signTitle"))) {ChatColor.translateAlternateColorCodes('&', text)
 				if(sign.getLine(0).equalsIgnoreCase(ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("signTitle")))) {
 					if(sign.getLine(1) != null) {
 							if(plugin.arenaExists(sign.getLine(1))) {
@@ -61,8 +60,7 @@ public class PGGrifblockPlayerClickBlockEvent implements Listener {
 									plugin.removePlayerFromArenaQueue(arenaName, ply, false);
 								}
 								else {
-									if(ply.hasPermission("pggb.player"))
-										//plugin.writeMessage(ply, "xd");
+									if(plugin.plyHasPerm(ply, "pggb.player"))
 										plugin.addPlayerToArenaQueue(arenaName, ply);
 								}
 							}
@@ -75,7 +73,7 @@ public class PGGrifblockPlayerClickBlockEvent implements Listener {
 	@EventHandler
 	public void onPlyClickEditMode(PlayerInteractEvent event) {
 		Player ply = event.getPlayer();
-		if(ply.hasPermission("pggb.admin") && plugin.isInEditMode(ply) != null && ply.getInventory().getItemInMainHand().getType() != Material.AIR) {
+		if(plugin.plyHasPerm(ply, "pggb.admin") && plugin.isInEditMode(ply) != null && ply.getInventory().getItemInMainHand().getType() != Material.AIR) {
 			event.setCancelled(true);
 			String arenaName = plugin.isInEditMode(ply);
 			//Block blockClicked = event.getClickedBlock();

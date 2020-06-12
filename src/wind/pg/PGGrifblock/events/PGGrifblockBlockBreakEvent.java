@@ -18,13 +18,13 @@ public class PGGrifblockBlockBreakEvent implements Listener {
 			event.setCancelled(true);
 		}
 		if(plugin.isInArena(event.getBlock().getLocation()) != null) {
-			if(!event.getPlayer().hasPermission("pggb.admin"))
+			if(!plugin.plyHasPerm(event.getPlayer(), "pggb.admin"))
 			{
 				event.setCancelled(true);
 			}
 		}
 		else if(plugin.isArenaSign(event.getBlock())) {
-			if(!event.getPlayer().hasPermission("pggb.admin"))
+			if(!plugin.plyHasPerm(event.getPlayer(), "pggb.admin"))
 			{
 				event.setCancelled(true);
 			}

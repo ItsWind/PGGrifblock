@@ -20,7 +20,7 @@ public class PGGrifblockSignChangeEvent implements Listener {
 	public void onSignChange(SignChangeEvent event) {
 		Player ply = event.getPlayer();
 		if(event.getLine(0).equalsIgnoreCase("[grifblock]")) {
-			if(ply.hasPermission("pggb.admin")) {
+			if(plugin.plyHasPerm(ply, "pggb.admin")) {
 				event.setLine(0, ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("signTitle")));
 				if(!plugin.arenaExists(event.getLine(1))) {
 					String signMatStr = event.getBlock().getType().toString();

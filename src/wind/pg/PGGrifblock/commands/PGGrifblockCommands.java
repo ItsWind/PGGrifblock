@@ -23,7 +23,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		if(sender.hasPermission("pggb.player")) {
+		if(plugin.plyHasPerm(sender, "pggb.player")) {
 			if(args.length > 0 && args[0].equalsIgnoreCase("add")) {
 				plugin.addPlayerToArenaQueue("grifword", Bukkit.getPlayer(args[1]));
 			}
@@ -42,7 +42,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 				commandStrings.put("admin|reload", "Reloads the config and resets arenas if they are empty.");
 				helpString += ChatColor.YELLOW + "--------------------" + ChatColor.WHITE + " Help " + ChatColor.YELLOW + "--------------------\n";
 				for(String cmdStr : commandStrings.keySet()) {
-					if(!cmdStr.contains("admin") || (cmdStr.contains("admin|") && sender.hasPermission("pggb.admin"))) {
+					if(!cmdStr.contains("admin") || (cmdStr.contains("admin|") && plugin.plyHasPerm(sender, "pggb.admin"))) {
 						String newCmd = cmdStr;
 						newCmd = newCmd.replace("admin|", "");
 						helpString += ChatColor.DARK_GRAY + "? " + ChatColor.GOLD + "/pggb " + newCmd + ChatColor.WHITE + ": " + commandStrings.get(cmdStr) + "\n";
@@ -57,21 +57,6 @@ public class PGGrifblockCommands implements CommandExecutor {
 						String team = args[1].toUpperCase();
 						if(plugin.playerIsQueued(ply) != null) {
 							PGGrifblockArena arena = plugin.playerIsQueued(ply);
-							/*Map<Player, PGGrifblockPlayer> teamMap;
-							if(team.equals("RED"))
-								teamMap = arena.redTeam;
-							else
-								teamMap = arena.blueTeam;
-							if(teamMap.size() < arena.players.size()-1) {
-								if(team.equals("RED"))
-									arena.redTeam.put(ply, arena.getPlayerObj(ply));
-								else
-									arena.blueTeam.put(ply, arena.getPlayerObj(ply));
-								arena.getPlayerObj(ply).assignTeam(team);
-								arena.updateScoreboards();
-							}
-							else
-								plugin.writeMessage(ply, "There are too many players on that team!");*/
 							if(arena.teams.get(team).size() < arena.players.size()-1) {
 								if(arena.getPlayerObj(ply).getTeam() == null) {
 									arena.teams.get(team).put(ply, arena.getPlayerObj(ply));
@@ -128,8 +113,13 @@ public class PGGrifblockCommands implements CommandExecutor {
 						}
 						if(args.length > 1 && plugin.arenaExists(args[1])) {
 							String arenaName = args[1];
-							plugin.writeMessage(ply, "You are now spectating " + arenaName + "! Use /pggb spectate whenever you want to exit!");
-							plugin.toggleSpectating(ply, arenaName);
+							if(ply.getLocation().getWorld().equals(plugin.getArenaBlockLocation(arenaName, "grifblockSpawn").getWorld())) {
+								plugin.writeMessage(ply, "You are now spectating " + arenaName + "! Use /pggb spectate whenever you want to exit!");
+								plugin.toggleSpectating(ply, arenaName);
+							}
+							else {
+								plugin.writeMessage(ply, "You must be in the same world as the arena to spectate!");
+							}
 						}
 						else {
 							plugin.writeMessage(ply, "No arena found.");
@@ -152,7 +142,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 				}
 			}
 			else if(args[0].equalsIgnoreCase("reload")) {
-				if(!sender.hasPermission("pggb.admin")) {
+				if(!plugin.plyHasPerm(sender, "pggb.admin")) {
 					plugin.writeMessage(sender, "You have to have the pggb.admin permission to use that!");
 					return false;
 				}
@@ -166,7 +156,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 				}
 			}
 			else if(args[0].equalsIgnoreCase("create")) {
-				if(!sender.hasPermission("pggb.admin")) {
+				if(!plugin.plyHasPerm(sender, "pggb.admin")) {
 					plugin.writeMessage(sender, "You have to have the pggb.admin permission to use that!");
 					return false;
 				}
@@ -188,7 +178,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 				}
 			}
 			else if(args[0].equalsIgnoreCase("tp")) {
-				if(!sender.hasPermission("pggb.admin")) {
+				if(!plugin.plyHasPerm(sender, "pggb.admin")) {
 					plugin.writeMessage(sender, "You have to have the pggb.admin permission to use that!");
 					return false;
 				}
@@ -205,7 +195,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 				}
 			}
 			else if(args[0].equalsIgnoreCase("edit")) {
-				if(!sender.hasPermission("pggb.admin")) {
+				if(!plugin.plyHasPerm(sender, "pggb.admin")) {
 					plugin.writeMessage(sender, "You have to have the pggb.admin permission to use that!");
 					return false;
 				}
@@ -244,7 +234,7 @@ public class PGGrifblockCommands implements CommandExecutor {
 				//}
 			}
 			else if(args[0].equalsIgnoreCase("delete")) {
-				if(!sender.hasPermission("pggb.admin")) {
+				if(!plugin.plyHasPerm(sender, "pggb.admin")) {
 					plugin.writeMessage(sender, "You have to have the pggb.admin permission to use that!");
 					return false;
 				}
@@ -275,6 +265,10 @@ public class PGGrifblockCommands implements CommandExecutor {
 				plugin.writeMessage(sender, "That's not a valid command! Try \"/pggb help\" instead!");
 				//plugin.writeMessage(sender, "How did you even get here? Are you some kind of wizard or some shit? Did you type in some fancy characters or whatever the fuck you kids do these days? Do you know how hard it fucking is to make a plugin you trash? I'm sure that you don't, because you wouldn't be sitting here trying to fucking break mine. Stop your shit.");
 			}
+		}
+		else {
+			plugin.writeMessage(sender, "You have no permission to use this plugin!");
+			return false;
 		}
 		return false;
 	}

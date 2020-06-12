@@ -16,6 +16,8 @@ roundsToWin: 3
 roundGraceTime: 5
 # The amount of seconds a player waits until they can attack.
 playerAttackCooldown: 1
+# The amount of seconds a player waits until they respawn in game.
+playerRespawn: 4
 
 # A list of arena award commands to execute.
 # #round - get the number of the wave.
