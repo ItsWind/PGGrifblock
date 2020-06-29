@@ -31,6 +31,9 @@ public class PGGrifblockEntityHitByEntityEvent implements Listener {
 						plugin.doMeleeSlide(ply, hit, itemName);
 					}
 				}
+				else {
+					event.setCancelled(true);
+				}
 			}
 		}
 	}

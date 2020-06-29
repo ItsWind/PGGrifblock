@@ -64,6 +64,9 @@ public class PGGrifblockArena {
 			ItemStack itemToAdd = new ItemStack(mat, 1);
 			ItemMeta itemToAddMeta = itemToAdd.getItemMeta();
 			itemToAddMeta.setDisplayName(arenaTools.get(mat));
+			ArrayList<String> lore = new ArrayList<String>();
+			lore.add(arenaTools.get(mat));
+			itemToAddMeta.setLore(lore);
 			itemToAdd.setItemMeta(itemToAddMeta);
 			arenaStarterKit.add(itemToAdd);
 		}

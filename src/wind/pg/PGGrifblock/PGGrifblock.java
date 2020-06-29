@@ -44,6 +44,7 @@ import wind.pg.PGGrifblock.events.PGGrifblockPlayerFoodLevelChangeEvent;
 import wind.pg.PGGrifblock.events.PGGrifblockPlayerJoinEvent;
 import wind.pg.PGGrifblock.events.PGGrifblockPlayerMoveEvent;
 import wind.pg.PGGrifblock.events.PGGrifblockPlayerQuitEvent;
+import wind.pg.PGGrifblock.events.PGGrifblockPlayerTeleportEvent;
 import wind.pg.PGGrifblock.events.PGGrifblockSignChangeEvent;
 
 public class PGGrifblock extends JavaPlugin {
@@ -76,6 +77,7 @@ public class PGGrifblock extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerFoodLevelChangeEvent(this), this);
 		getServer().getPluginManager().registerEvents(new PGGrifblockInventoryClickEvent(this), this);
 		getServer().getPluginManager().registerEvents(new PGGrifblockBlockPlaceEvent(this), this);
+		getServer().getPluginManager().registerEvents(new PGGrifblockPlayerTeleportEvent(this), this);
 		
 		this.saveDefaultConfig();
 		

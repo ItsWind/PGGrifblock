@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -185,7 +186,8 @@ public class PGGrifblockCommands implements CommandExecutor {
 				if(sender instanceof Player) {
 					Player ply = (Player) sender;
 					if(args.length > 1 && plugin.arenaExists(args[1])) {
-						ply.teleport(plugin.getArenaBlockLocation(args[1], "grifblockSpawn"));
+						ply.teleport(plugin.getArenaBlockLocation(args[1], "grifblockSpawn").add(0, 1.5, 0));
+						ply.setGameMode(GameMode.CREATIVE);
 						//Location spawnLoc = new Location(plugin.getArenaObj(args[1]).arenaWorld, plugin.getArenaCordData(args[1], "playerSpawn").get(0), plugin.getArenaCordData(args[1], "playerSpawn").get(1)+1, plugin.getArenaCordData(args[1], "playerSpawn").get(2));
 						//ply.teleport(spawnLoc);
 					}
